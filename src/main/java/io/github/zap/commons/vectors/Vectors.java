@@ -10,7 +10,8 @@ import java.util.Objects;
 
 public final class Vectors {
     public static final double EPSILON = 0.000001;
-    public static final Vector3I ZERO = new Vector3IImpl(0,0, 0);
+    public static final Vector3I ZERO_INT = new Vector3IImpl(0,0, 0);
+    public static final Vector3D ZERO_DOUBLE = new Vector3DImpl(0,0, 0);
 
     private record Vector3DImpl(double x, double y, double z) implements Vector3D {
         @Override
@@ -190,6 +191,16 @@ public final class Vectors {
         return distanceSquared(first.x(), first.y(), first.z(), second.x(), second.y(), second.z());
     }
 
+    public static @NotNull Vector3D minimum(@NotNull Vector3D first, @NotNull Vector3D second) {
+        return new Vector3DImpl(Math.min(first.x(), second.x()), Math.min(first.y(), second.y()),
+                Math.min(first.z(), second.z()));
+    }
+
+    public static @NotNull Vector3D maximum(@NotNull Vector3D first, @NotNull Vector3D second) {
+        return new Vector3DImpl(Math.max(first.x(), second.x()), Math.max(first.y(), second.y()),
+                Math.max(first.z(), second.z()));
+    }
+
     public static int distanceSquared(int x1, int y1, int z1, int x2, int y2, int z2) {
         int xDif = x2 - x1;
         int yDif = y2 - y1;
@@ -252,6 +263,10 @@ public final class Vectors {
 
     public static @NotNull Vector3D subtract(@NotNull Vector3D first, @NotNull Vector3I second) {
         return new Vector3DImpl(first.x() - second.x(), first.y() - second.y(), first.z() - second.z());
+    }
+
+    public static @NotNull Vector3D subtract(@NotNull Vector3D first, double second) {
+        return new Vector3DImpl(first.x() - second, first.y() - second, first.z() - second);
     }
 
     public static @NotNull Vector3D subtract(@NotNull Vector3I first, @NotNull Vector3D second) {
