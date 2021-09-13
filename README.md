@@ -1,5 +1,5 @@
 # zap-commons (Readme is under development)
-This repository is contains commonly used classes in our project
+This repository is contains commonly used classes in our project. It will also contain public API documentation, including custom MythicMobs configuration information.
 
 ## Setup
 What you will need
