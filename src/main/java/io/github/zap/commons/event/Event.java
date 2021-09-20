@@ -109,6 +109,10 @@ public class Event<T> {
         }
     }
 
+    /**
+     * Clears all handlers from this event. If handlers are in the process of being called, they will finish before any
+     * are removed.
+     */
     public void clearHandlers() {
         if(isInvoking()) {
             clearFlag = true;
