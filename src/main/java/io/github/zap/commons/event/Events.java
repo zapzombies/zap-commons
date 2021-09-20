@@ -46,7 +46,7 @@ public final class Events {
                 tryReflectHandlerList();
 
                 //noinspection unchecked
-                EventExecutor executor = (listener, event) -> wrappedEvent.invoke((T)event);
+                EventExecutor executor = (listener, event) -> invoke((T)event);
 
                 if(handlerList != null) {
                     registeredListener = new RegisteredListener(listener, executor, priority, plugin, ignoreCancelled);
@@ -121,7 +121,7 @@ public final class Events {
         }
     }
 
-    public static <T extends org.bukkit.event.Event> @NotNull Event<T> fromBukkit(@NotNull Plugin plugin,
+    public static <T extends org.bukkit.event.Event> @NotNull Event<T> bukkitProxy(@NotNull Plugin plugin,
                                                                                   @NotNull EventPriority priority,
                                                                                   boolean ignoreCancelled,
                                                                                   @NotNull Class<T> bukkitEventClass,
@@ -129,13 +129,13 @@ public final class Events {
         return new BukkitProxy<>(plugin, priority, ignoreCancelled, bukkitEventClass, wrapped);
     }
 
-    public static <T extends org.bukkit.event.Event> @NotNull Event<T> fromBukkit(@NotNull Plugin plugin,
+    public static <T extends org.bukkit.event.Event> @NotNull Event<T> bukkitProxy(@NotNull Plugin plugin,
                                                                                   @NotNull Class<T> bukkitEventClass,
                                                                                   @NotNull Event<T> wrapped) {
         return new BukkitProxy<>(plugin, EventPriority.NORMAL, false, bukkitEventClass, wrapped);
     }
 
-    public static <T extends org.bukkit.event.Event> @NotNull Event<T> fromBukkit(@NotNull Plugin plugin,
+    public static <T extends org.bukkit.event.Event> @NotNull Event<T> bukkitProxy(@NotNull Plugin plugin,
                                                                                   @NotNull Class<T> bukkitEventClass) {
         return new BukkitProxy<>(plugin, EventPriority.NORMAL, false, bukkitEventClass,
                 new Event<>(plugin.getLogger()));

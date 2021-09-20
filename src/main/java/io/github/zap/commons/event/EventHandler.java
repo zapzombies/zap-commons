@@ -11,5 +11,5 @@ public interface EventHandler<T> {
      * @param event The event which invoked this handler
      * @param args The argument, which may be null at the discretion of the calling event
      */
-    void invoke(Event<? extends T> event, T args);
+    void invoke(Event<T> event, T args);
 }

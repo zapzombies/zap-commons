@@ -14,18 +14,19 @@ import java.util.logging.Logger;
 public class Event<T> {
     protected final Logger logger;
 
-    private boolean invoking = false;
-    private boolean clearFlag = false;
     private final List<EventHandler<T>> handlers = new ArrayList<>();
 
     private final List<EventHandler<T>> pendingAdditions = new ArrayList<>();
     private final List<EventHandler<T>> pendingRemovals = new ArrayList<>();
 
+    private boolean invoking = false;
+    private boolean clearFlag = false;
+
     public Event(@NotNull Logger logger) {
-        this.logger = logger;
+        this.logger = Objects.requireNonNull(logger, "logger cannot be null");
     }
 
-    protected void applyHandlerListModifications() {
+    private void applyHandlerListModifications() {
         if(clearFlag) {
             handlers.clear();
             clearFlag = false;
@@ -43,7 +44,7 @@ public class Event<T> {
         }
     }
 
-    protected void invokeInternal(T args) {
+    private void invokeInternal(T args) {
         Throwable root = null;
         for(EventHandler<T> handler : handlers) {
             try {
@@ -60,7 +61,7 @@ public class Event<T> {
         }
 
         if(root != null) {
-            logger.log(Level.WARNING, "exceptions(s) thrown during handler loop", root);
+            logger.log(Level.WARNING, "exceptions(s) thrown in handler loop", root);
         }
     }
 
@@ -123,7 +124,7 @@ public class Event<T> {
     }
 
     /**
-     * Returns the number of active handlers. Note that if this function is called inside of a handler, and previously
+     * Returns the number of active handlers. Note that if this function is called inside a handler, and previously
      * called handlers added or removed handlers, this value will not reflect the number of handlers that will be
      * called on the next execution of {@link Event#invoke(Object)}.
      * @return The active handler count
