@@ -116,11 +116,6 @@ public final class Events {
         }
 
         @Override
-        public boolean isInvoking() {
-            return wrappedEvent.isInvoking();
-        }
-
-        @Override
         public @NotNull Logger getLogger() {
             return wrappedEvent.getLogger();
         }

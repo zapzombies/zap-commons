@@ -70,13 +70,13 @@ public class Event<T> {
      * @param args The arguments to call each handler with
      */
     public void invoke(T args) {
-        if(isInvoking()) {
+        if(invoking) {
             throw new IllegalStateException("cannot recursively invoke an event");
         }
 
-        setInvoking(true);
+        invoking = true;
         invokeInternal(args);
-        setInvoking(false);
+        invoking = false;
 
         applyHandlerListModifications();
     }
@@ -87,7 +87,7 @@ public class Event<T> {
      */
     public void addHandler(@NotNull EventHandler<T> handler) {
         Objects.requireNonNull(handler, "handler cannot be null");
-        if(isInvoking()) {
+        if(invoking) {
             pendingAdditions.add(handler);
         }
         else {
@@ -101,7 +101,7 @@ public class Event<T> {
      */
     public void removeHandler(@NotNull EventHandler<T> handler) {
         Objects.requireNonNull(handler, "handler cannot be null");
-        if(isInvoking()) {
+        if(invoking) {
             pendingRemovals.add(handler);
         }
         else {
@@ -114,7 +114,7 @@ public class Event<T> {
      * are removed.
      */
     public void clearHandlers() {
-        if(isInvoking()) {
+        if(invoking) {
             clearFlag = true;
         }
         else {
@@ -130,18 +130,6 @@ public class Event<T> {
      */
     public int handlerCount() {
         return handlers.size();
-    }
-
-    /**
-     * Returns true if this event is in the process of calling its handlers; and false otherwise.
-     * @return True if this event is in the process of calling its handlers; and false otherwise
-     */
-    public boolean isInvoking() {
-        return invoking;
-    }
-
-    protected void setInvoking(boolean invoking) {
-        this.invoking = invoking;
     }
 
     /**
