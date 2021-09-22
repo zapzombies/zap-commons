@@ -24,7 +24,9 @@ public class CommaSeperatedArrayListDeserializer implements ValueDeserializer<Ar
         if(typeParam.isPresent()) {
             ArrayList items = new ArrayList();
             for(var item : StringUtils.fromCommaSeperated(value)) {
-                var result = engine.deserialize(NonParameterizedType.fromClass(typeParam.get()), item);
+                var result = typeParam.get() instanceof ParameterizedType childPt ?
+                        engine.deserialize(childPt, item) :
+                        engine.deserialize(NonParameterizedType.fromClass((Class<?>) typeParam.get()), item);
                 if(result.isSuccess())
                     items.add(result.result().get());
                 else

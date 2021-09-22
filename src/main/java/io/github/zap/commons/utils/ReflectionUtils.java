@@ -1,9 +1,13 @@
 package io.github.zap.commons.utils;
 
+import com.google.common.collect.ObjectArrays;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.*;
 
@@ -87,6 +91,24 @@ public class ReflectionUtils {
 
 
     /**
+     * get all declared fields from superclass and itself
+     * @param type the class to search
+     * @param exclusiveParent the superclass to search up to
+     * @return a list of fields
+     */
+    public static Field[] getFieldsUpTo(@Nonnull Class<?> type, @Nullable Class<?> exclusiveParent) {
+        Field[] result = type.getDeclaredFields();
+
+        Class<?> parentClass = type.getSuperclass();
+        if (parentClass != null && (!parentClass.equals(exclusiveParent))) {
+            Field[] parentClassFields = getFieldsUpTo(parentClass, exclusiveParent);
+            result = ObjectArrays.concat(result, parentClassFields, Field.class);
+        }
+
+        return result;
+    }
+
+    /**
      * Get the type parameters of a specified class for a given subclass.
      * Eg. Get Iterator type params of an ArrayList
      * @param clazz the subclass to search
@@ -94,50 +116,64 @@ public class ReflectionUtils {
      * @return a list of type params list, each nested list contains the ordered type params of the superclass
      */
     @NotNull
-    public static List<List<? extends Class<?>>> getSuperclassTypeParams(ParameterizedType clazz, Class<?> targetAncestor) {
-        Map<TypeVariable<?>, Class<?>> rootActualTypeArgs = new HashMap<>();
+    public static List<List<? extends Type>> getSuperclassTypeParams(ParameterizedType clazz, Type targetAncestor) {
+        Map<TypeVariable<?>, Type> rootActualTypeArgs = new HashMap<>();
         var pt = clazz.getActualTypeArguments();
         var rawPt = ((Class<?>) clazz.getRawType()).getTypeParameters();
 
         for(var i = 0; i < pt.length; i++) {
-            rootActualTypeArgs.put(rawPt[i], (Class<?>) pt[i]);
+            rootActualTypeArgs.put(rawPt[i], pt[i]);
         }
         return GetSuperClassTypeParamsHelper.traverse(clazz, targetAncestor, rootActualTypeArgs);
     }
 
+
     static class GetSuperClassTypeParamsHelper {
         @NotNull
-        private static List<List<? extends Class<?>>> traverse(
+        private static List<List<? extends Type>> traverse(
                 ParameterizedType parameterizedType,
-                Class<?> targetAncestor,
-                Map<TypeVariable<?>, Class<?>> rootActualTypeArgs) {
-            List<List<? extends Class<?>>> resultBuffer = new ArrayList<>();
+                Type targetAncestor,
+                Map<TypeVariable<?>, Type> rootActualTypeArgs) {
+            List<List<? extends Type>> resultBuffer = new ArrayList<>();
             var rawType = (Class<?>) parameterizedType.getRawType();
 
             for(var interfaze : rawType.getGenericInterfaces()) {
-                if(interfaze instanceof ParameterizedType ipt) {
-                    if(ipt.getRawType() == targetAncestor) {
-                        resultBuffer.add(rootActualTypeArgs.values().stream().toList());
-                    } else {
-                        resultBuffer.addAll(traverse(ipt, targetAncestor, updateRootTypeParams(rootActualTypeArgs, ipt)));
-                    }
-                }
+                resultBuffer.addAll(traverseSuperclass(interfaze, targetAncestor, rootActualTypeArgs));
             }
 
-            var ct = rawType.getGenericSuperclass();
-            if(ct instanceof ParameterizedType cpt) {
-                resultBuffer.addAll(traverse(cpt, targetAncestor, updateRootTypeParams(rootActualTypeArgs, cpt)));
-            }
+            resultBuffer.addAll(traverseSuperclass(rawType.getGenericSuperclass(), targetAncestor, rootActualTypeArgs));
             return resultBuffer;
         }
 
         @NotNull
-        private static HashMap<TypeVariable<?>, Class<?>> updateRootTypeParams(
-                Map<TypeVariable<?>, Class<?>> rootActualTypeArgs,
+        private static List<List<? extends Type>> traverseSuperclass(Type type, Type targetAncestor, Map<TypeVariable<?>, Type> rootActualTypeArgs) {
+            List<List<? extends Type>> resultBuffer = new ArrayList<>();
+            if(type instanceof ParameterizedType pt) {
+                if(pt.getRawType() == targetAncestor) {
+                    resultBuffer.add(updateRootTypeParams(rootActualTypeArgs, pt).values().stream().toList());
+                } else {
+                    resultBuffer.addAll(traverse(pt, targetAncestor, updateRootTypeParams(rootActualTypeArgs, pt)));
+                }
+            } else if (type instanceof Class<?> clazz) {
+                var child = clazz.getGenericSuperclass();
+                if(child != null) {
+                    var ipt = child instanceof ParameterizedType ?
+                            (ParameterizedType) child :
+                            NonParameterizedType.fromClass(((Class<?>) child));
+                    resultBuffer.addAll(traverse(ipt, targetAncestor, updateRootTypeParams(rootActualTypeArgs, ipt)));
+                }
+            }
+
+            return resultBuffer;
+        }
+
+        @NotNull
+        private static Map<TypeVariable<?>, Type> updateRootTypeParams(
+                Map<TypeVariable<?>, Type> rootActualTypeArgs,
                 ParameterizedType pt) {
             var actualTypesParams = pt.getActualTypeArguments();
-            var actualTypesParamsRoot = new Class<?>[actualTypesParams.length];
-            var actualTypesParamsRootMap = new HashMap<TypeVariable<?>, Class<?>>();
+            var actualTypesParamsRoot = new Type[actualTypesParams.length];
+            var actualTypesParamsRootMap = new LinkedHashMap<TypeVariable<?>, Type>();
             for(int i = 0; i < actualTypesParams.length; i++) {
                 actualTypesParamsRoot[i] = actualTypesParams[i] instanceof Class<?> actualClassParam ?
                         actualClassParam :
