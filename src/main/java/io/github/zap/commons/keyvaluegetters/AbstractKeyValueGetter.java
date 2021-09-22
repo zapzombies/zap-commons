@@ -1,6 +1,7 @@
 package io.github.zap.commons.keyvaluegetters;
 
 import io.github.zap.commons.utils.NonParameterizedType;
+import io.github.zap.commons.utils.ReflectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
@@ -122,16 +123,15 @@ public abstract class AbstractKeyValueGetter implements KeyValueGetter {
         if (cachedKeyFields.containsKey(clazz)) {
             return cachedKeyFields.get(clazz);
         } else {
-            Set<KeyField> result = Arrays.stream(clazz.getDeclaredFields())
-                    .filter(f -> f.getAnnotation(KeyDeclaration.class) != null)
-                    .map(f -> {
-                        KeyDeclaration kd = f.getAnnotation(KeyDeclaration.class);
-                        String keyName = StringUtils.isNotEmpty(kd.name()) ?
-                                kd.name() :
-                                builder.getKeyTransformer().transform(f.getName());
-                        return new KeyField(f.getName(), keyName, NonParameterizedType.fromField(f), kd.required(), kd.description());
-                    })
-                    .collect(Collectors.toSet());
+            Set<KeyField> result = new HashSet<>();
+            for(var item : ReflectionUtils.getAnnotatedFields(clazz, KeyDeclaration.class).entrySet()) {
+                String keyName = StringUtils.isNotEmpty(item.getValue().name()) ?
+                        item.getValue().name() :
+                        builder.getKeyTransformer().transform(item.getKey().getName());
+
+                result.add(new KeyField(item.getKey(), keyName, item.getValue()));
+            }
+
             cachedKeyFields.put(clazz, result);
             return result;
         }

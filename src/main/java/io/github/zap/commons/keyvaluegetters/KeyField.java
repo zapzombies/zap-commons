@@ -1,5 +1,8 @@
 package io.github.zap.commons.keyvaluegetters;
 
+import io.github.zap.commons.utils.NonParameterizedType;
+
+import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 
 /**
@@ -10,4 +13,9 @@ public record KeyField (
         String keyName,
         ParameterizedType parameterizedType,
         boolean required,
-        String description){}
+        String description){
+    public KeyField(Field field, String keyName, KeyDeclaration annotation) {
+        this(field.getName(), keyName, NonParameterizedType.fromField(field), annotation.required(), annotation.description());
+    }
+
+}

@@ -81,7 +81,7 @@ public class ReflectionUtils {
         for(var item : classes) {
             if(target.isAssignableFrom(item)) {
                 if(result == null || item.isAssignableFrom(result)) {
-                    if(!includeSelf || item != target)
+                    if(includeSelf || item != target)
                         result = item;
                 }
             }
