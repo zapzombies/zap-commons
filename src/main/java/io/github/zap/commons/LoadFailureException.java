@@ -1,4 +1,4 @@
-package io.github.zap.commons.utils;
+package io.github.zap.commons;
 
 public class LoadFailureException  extends Exception {
     public LoadFailureException(String message) {

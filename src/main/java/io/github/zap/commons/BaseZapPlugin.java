@@ -1,11 +1,8 @@
 package io.github.zap.commons;
 
 import com.google.inject.Injector;
-import io.github.zap.commons.utils.LoadFailureException;
 import org.apache.commons.lang3.time.StopWatch;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.util.LinkedList;
 
 /**
  * A base plugin for *all* zap plugin projects

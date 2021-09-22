@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -89,6 +90,27 @@ public class ReflectionUtils {
         return result;
     }
 
+
+    /**
+     * Get all fields annotated with a specified annotation from a class
+     * @param target the class to retrieve fields
+     * @param annotation the annotation to look for
+     * @param <T> the type of the annotation
+     * @return A hashmap contains the matching {@link Field}
+     */
+    public static <T extends Annotation> Map<Field, T> getAnnotatedFields(Class<?> target, Class<T> annotation) {
+        var fields = getFieldsUpTo(target, null);
+        var resultMap = new HashMap<Field, T>();
+
+        for(int i = 0; i < fields.length; i++) {
+            var instance = fields[i].getAnnotation(annotation);
+            if(instance != null) {
+                resultMap.put(fields[i], instance);
+            }
+        }
+
+        return resultMap;
+    }
 
     /**
      * get all declared fields from superclass and itself
