@@ -66,7 +66,7 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
         }
     }
 
-    private void maybeDeregister() {
+    private void maybeUnregister() {
         if(super.handlerCount() == 0 && eventRegistered) {
             if(handlerList != null) {
                 handlerList.unregister(registeredListener);
@@ -83,7 +83,7 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     public void invoke(T args) {
         super.invoke(args);
         maybeRegister();
-        maybeDeregister();
+        maybeUnregister();
     }
 
     @Override
@@ -95,7 +95,7 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     @Override
     public void removeHandler(@NotNull EventHandler<T> handler) {
         super.removeHandler(handler);
-        maybeDeregister();
+        maybeUnregister();
     }
 
     @Override
@@ -106,7 +106,7 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     @Override
     public void clearHandlers() {
         super.clearHandlers();
-        maybeDeregister();
+        maybeUnregister();
     }
 
     @Override

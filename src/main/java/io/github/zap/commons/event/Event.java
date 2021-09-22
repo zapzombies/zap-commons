@@ -216,15 +216,15 @@ public interface Event<T> {
      * Maps this event to an event of another type. Similarly to {@link Event#linkTo(Event)}, the other event's handlers
      * will be invoked directly after this one. The provided mapping function will be used to convert between the
      * different types.
-     * @param mapper The mapping function
      * @param other The event to map calls to
+     * @param mapper The mapping function
      * @param <V> The type the other event receives
      * @return A wrapper for this event, which is linked to the provided event of a different type
      */
-    default @NotNull <V> Event<T> mapTo(@NotNull Function<T, V> mapper, @NotNull Event<V> other) {
+    default @NotNull <V> Event<T> mapTo(@NotNull Event<V> other, @NotNull Function<T, V> mapper) {
         Validate.isTrue(other != this, "cannot map to the same object");
-        Objects.requireNonNull(mapper, "mapper cannot be null");
         Objects.requireNonNull(other, "other cannot be null");
+        Objects.requireNonNull(mapper, "mapper cannot be null");
 
         return new WrappedEvent<>(this) {
             @Override
