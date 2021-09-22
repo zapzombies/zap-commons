@@ -46,7 +46,7 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
         }
     }
 
-    private void maybeRegister() {
+    private void register() {
         if(super.handlerCount() > 0 && !eventRegistered) {
             reflectHandlerList();
 
@@ -82,14 +82,14 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     @Override
     public void invoke(Object sender, T args) {
         super.invoke(sender, args);
-        maybeRegister();
+        register();
         unregister();
     }
 
     @Override
     public void addHandler(@NotNull EventHandler<T> handler) {
         super.addHandler(handler);
-        maybeRegister();
+        register();
     }
 
     @Override
