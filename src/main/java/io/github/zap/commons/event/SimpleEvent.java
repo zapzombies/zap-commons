@@ -24,10 +24,12 @@ import java.util.logging.Logger;
  * {@link ExceptionHandler} in the constructor (see {@link ExceptionHandlers} for default factory methods). The
  * handler will be passed the <i>first</i> {@link Throwable} instance that was produced, if any, and subsequent
  * Throwables will be suppressed (see {@link Throwable#addSuppressed(Throwable)}). The default exception handler will
- * be used if none is supplied, which is to simply log exceptions using the global logger.
+ * be used if none is supplied, which is to rethrow a single, representative exception with all subsequent exceptions
+ * after the first being suppressed.
  *
  * This class is not thread safe. It does not support recursively invoking handlers (that is, calling the
- * {@link SimpleEvent#invoke(Object)} method while inside a handler that is currently being invoked by this instance).
+ * {@link SimpleEvent#invoke(Object, Object)} method while inside a handler that is currently being invoked by this
+ * instance).
  * Attempting to do so will result in an unchecked {@link IllegalStateException}.
  * @param <T> The type of argument handlers will receive
  */
@@ -73,7 +75,7 @@ public class SimpleEvent<T> implements Event<T> {
     }
 
     public SimpleEvent() {
-        this(ExceptionHandlers.logHandler(Logger.getGlobal()));
+        this(ExceptionHandlers.rethrow());
     }
 
     private void addHandlerInternal(EventHandler<T> handler) {
@@ -137,13 +139,13 @@ public class SimpleEvent<T> implements Event<T> {
         }
     }
 
-    private void invokeInternal(T args) {
+    private void invokeInternal(Object sender, T args) {
         RuntimeException first = null;
         for(int i = 0; i < size; i++) {
             EventHandler handler = bakedHandlers[i];
 
             try {
-                handler.invoke(this, args);
+                handler.invoke(sender, args);
             }
             catch (RuntimeException exception) {
                 if(first == null) {
@@ -186,7 +188,7 @@ public class SimpleEvent<T> implements Event<T> {
     }
 
     @Override
-    public void invoke(T args) {
+    public void invoke(Object sender, T args) {
         if(invoking) {
             throw new IllegalStateException("cannot recursively invoke an event");
         }
@@ -194,7 +196,7 @@ public class SimpleEvent<T> implements Event<T> {
         processModifications();
 
         invoking = true;
-        invokeInternal(args);
+        invokeInternal(sender, args);
         invoking = false;
 
         processModifications();

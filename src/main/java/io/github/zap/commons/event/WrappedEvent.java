@@ -12,8 +12,8 @@ class WrappedEvent<T> implements Event<T> {
      }
 
      @Override
-     public void invoke(T args) {
-        wrapped.invoke(args);
+     public void invoke(Object sender, T args) {
+        wrapped.invoke(sender, args);
      }
 
      @Override

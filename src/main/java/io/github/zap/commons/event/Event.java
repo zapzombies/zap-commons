@@ -14,7 +14,7 @@ import java.util.function.Predicate;
  *
  * The order in which handlers are executed is not specified and is left up to implementations. Thread-safety, or lack
  * thereof, is also implementation-dependent. Handlers are not guaranteed to be invoked on the same thread as the one
- * calling {@link Event#invoke(Object)} (although implementations may offer this guarantee).
+ * calling {@link Event#invoke(Object, Object)} (although implementations may offer this guarantee).
  *
  * Handlers may be added and removed at any time (even while other handlers are being called). Recursive invocation is
  * typically disallowed, but there is no requirement that this must be the case.
@@ -28,14 +28,15 @@ public interface Event<T> {
     /**
      * Calls the event handlers for this event. The order in which handlers are invoked is not deterministic for some
      * implementations.
+     * @param sender The object responsible for calling this method
      * @param args The arguments to call each handler with
      */
-    void invoke(T args);
+    void invoke(Object sender, T args);
 
     /**
      * Adds an event handler to this event. If this function is called inside the body of a handler while it is being
      * invoked by this event, the newly-registered handler will typically only be called during the next call to
-     * {@link Event#invoke(Object)}.
+     * {@link Event#invoke(Object, Object)}.
      *
      * Some Event implementations may support duplicate handlers, in which case the same handler will be called twice.
      * Others may not support duplicates, in which case a runtime exception will be thrown.
@@ -46,7 +47,7 @@ public interface Event<T> {
     /**
      * Removes a handler from this event, if it is present. If this function is called inside the body of a handler
      * while it is being invoked by this event, the newly-removed handler will still be called (if it wasn't already).
-     * The next call to {@link Event#invoke(Object)} will not include the removed handler. If there are multiple
+     * The next call to {@link Event#invoke(Object, Object)} will not include the removed handler. If there are multiple
      * handlers that are equal to the provided handler, only one will be removed.
      * @param handler The handler to remove
      */
@@ -133,9 +134,9 @@ public interface Event<T> {
             private final Object lock = new Object();
 
             @Override
-            public void invoke(T args) {
+            public void invoke(Object sender, T args) {
                 synchronized(lock) {
-                    Event.this.invoke(args);
+                    Event.this.invoke(sender, args);
                 }
             }
 
@@ -186,9 +187,9 @@ public interface Event<T> {
 
         return new WrappedEvent<>(this) {
             @Override
-            public void invoke(T args) {
+            public void invoke(Object sender, T args) {
                 if(predicate.test(args)) {
-                    super.invoke(args);
+                    super.invoke(sender, args);
                 }
             }
         };
@@ -205,9 +206,9 @@ public interface Event<T> {
 
         return new WrappedEvent<>(this) {
             @Override
-            public void invoke(T args) {
-                super.invoke(args);
-                other.invoke(args);
+            public void invoke(Object sender, T args) {
+                super.invoke(sender, args);
+                other.invoke(sender, args);
             }
         };
     }
@@ -228,9 +229,9 @@ public interface Event<T> {
 
         return new WrappedEvent<>(this) {
             @Override
-            public void invoke(T args) {
-                super.invoke(args);
-                other.invoke(mapper.apply(args));
+            public void invoke(Object sender, T args) {
+                super.invoke(sender, args);
+                other.invoke(sender, mapper.apply(args));
             }
         };
     }

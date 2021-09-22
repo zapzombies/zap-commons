@@ -10,8 +10,8 @@ import org.jetbrains.annotations.NotNull;
 public interface EventHandler<T> {
     /**
      * Calls the handler with the given argument.
-     * @param event The event which invoked this handler
-     * @param args The argument, which may be null at the discretion of the calling event
+     * @param sender The object responsible for sending this event
+     * @param args The arguments, which may be null at the discretion of the calling event
      */
-    void invoke(@NotNull Event<T> event, T args);
+    void invoke(Object sender, T args);
 }

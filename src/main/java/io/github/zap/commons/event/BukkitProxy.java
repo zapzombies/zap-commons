@@ -51,7 +51,7 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
             reflectHandlerList();
 
             //noinspection unchecked
-            EventExecutor executor = (ignored, event) -> invoke((T)event);
+            EventExecutor executor = (ignored, event) -> invoke(this, (T)event);
 
             if(handlerList != null) {
                 registeredListener = new RegisteredListener(listener, executor, priority, plugin, ignoreCancelled);
@@ -80,8 +80,8 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     }
 
     @Override
-    public void invoke(T args) {
-        super.invoke(args);
+    public void invoke(Object sender, T args) {
+        super.invoke(sender, args);
         maybeRegister();
         unregister();
     }
