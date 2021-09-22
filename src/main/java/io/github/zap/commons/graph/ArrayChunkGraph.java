@@ -1,4 +1,4 @@
-package io.github.zap.commons.vectors.graph;
+package io.github.zap.commons.graph;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -83,16 +83,16 @@ public class ArrayChunkGraph<T> implements ChunkGraph<T> {
             int n = this.n;
 
             n++;
-            if(row == null || !row.hasNonNull(n)) {
+            if(row == null || row.hasNull(n)) {
                 r++;
 
-                if(layer == null || !layer.hasNonNull(r)) {
+                if(layer == null || layer.hasNull(r)) {
                     l++;
 
-                    if(segment == null || !segment.hasNonNull(l)) {
+                    if(segment == null || segment.hasNull(l)) {
                         s++;
 
-                        if(chunk == null || !chunk.hasNonNull(s)) {
+                        if(chunk == null || chunk.hasNull(s)) {
                             boolean foundChunk = false;
 
                             z++;

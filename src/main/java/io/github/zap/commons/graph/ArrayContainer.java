@@ -1,4 +1,4 @@
-package io.github.zap.commons.vectors.graph;
+package io.github.zap.commons.graph;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -23,16 +23,16 @@ public class ArrayContainer<T> {
         throw new IllegalStateException("No more non-null elements");
     }
 
-    public boolean hasNonNull(int start) {
+    public boolean hasNull(int start) {
         for(int i = start; i < array.length; i++) {
             T element = array[i];
 
             if(element != null) {
-                return true;
+                return false;
             }
         }
 
-        return false;
+        return true;
     }
 
     public boolean inRange(int index) {
