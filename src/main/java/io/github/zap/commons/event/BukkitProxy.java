@@ -33,7 +33,7 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
         this.ignoreCancelled = ignoreCancelled;
     }
 
-    private void maybeReflectHandlerList() {
+    private void reflectHandlerList() {
         if(handlerList == null && !reflectionFailed) {
             try {
                 handlerList = (HandlerList)bukkitEventClass.getMethod("getHandlerList").invoke(null);
@@ -48,7 +48,7 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
 
     private void maybeRegister() {
         if(super.handlerCount() > 0 && !eventRegistered) {
-            maybeReflectHandlerList();
+            reflectHandlerList();
 
             //noinspection unchecked
             EventExecutor executor = (ignored, event) -> invoke((T)event);
@@ -66,7 +66,7 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
         }
     }
 
-    private void maybeUnregister() {
+    private void unregister() {
         if(super.handlerCount() == 0 && eventRegistered) {
             if(handlerList != null) {
                 handlerList.unregister(registeredListener);
@@ -83,7 +83,7 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     public void invoke(T args) {
         super.invoke(args);
         maybeRegister();
-        maybeUnregister();
+        unregister();
     }
 
     @Override
@@ -95,7 +95,7 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     @Override
     public void removeHandler(@NotNull EventHandler<T> handler) {
         super.removeHandler(handler);
-        maybeUnregister();
+        unregister();
     }
 
     @Override
@@ -106,7 +106,7 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     @Override
     public void clearHandlers() {
         super.clearHandlers();
-        maybeUnregister();
+        unregister();
     }
 
     @Override
