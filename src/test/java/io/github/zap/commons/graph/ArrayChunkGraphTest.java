@@ -1,4 +1,4 @@
-package io.github.zap.commons.vectors.graph;
+package io.github.zap.commons.graph;
 
 import io.github.zap.commons.vectors.*;
 import org.junit.jupiter.api.AfterEach;

@@ -1,4 +1,4 @@
-package io.github.zap.commons.vectors.graph;
+package io.github.zap.commons.graph;
 
 import io.github.zap.commons.vectors.Vector3I;
 import org.jetbrains.annotations.NotNull;

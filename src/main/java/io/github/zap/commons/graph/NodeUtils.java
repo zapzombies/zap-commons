@@ -1,9 +1,8 @@
-package io.github.zap.commons.vectors.graph;
+package io.github.zap.commons.graph;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.GenericDeclaration;
 import java.util.function.BiConsumer;
 
 class NodeUtils {
