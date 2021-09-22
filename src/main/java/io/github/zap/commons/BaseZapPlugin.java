@@ -41,5 +41,5 @@ public abstract class BaseZapPlugin extends JavaPlugin {
      * Enabling plugin. Same purpose as {@link JavaPlugin#onEnable()}
      * @throws LoadFailureException any error encountered during plugin enable phase
      */
-    abstract void doEnable() throws LoadFailureException;
+    public abstract void doEnable() throws LoadFailureException;
 }
