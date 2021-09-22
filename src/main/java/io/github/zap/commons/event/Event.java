@@ -112,7 +112,7 @@ public interface Event<T> {
 
     /**
      * See {@link Event#bukkitProxy(Plugin, Class, EventPriority, boolean)}. Event priority defaults to normal,
-     * cancelled events are not ignored.
+     * cancelled events ignored.
      * @param plugin The plugin to register the proxied Bukkit event under
      * @param bukkitEventClass The class of the Bukkit event
      * @param <T> The type of Bukkit event
@@ -120,7 +120,7 @@ public interface Event<T> {
      */
     static <T extends org.bukkit.event.Event> Event<T> bukkitProxy(@NotNull Plugin plugin,
                                                                    @NotNull Class<T> bukkitEventClass) {
-        return bukkitProxy(plugin, bukkitEventClass, EventPriority.NORMAL, true);
+        return bukkitProxy(plugin, bukkitEventClass, EventPriority.NORMAL, false);
     }
 
     /**
