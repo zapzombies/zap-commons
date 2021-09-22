@@ -22,7 +22,7 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
 
     private boolean eventRegistered = false;
     private boolean reflectionFailed = false;
-    private HandlerList handlerList;
+    private HandlerList handlerList = null;
     private RegisteredListener registeredListener;
 
     BukkitProxy(@NotNull Plugin plugin, @NotNull Class<T> bukkitEventClass, @NotNull EventPriority priority,
@@ -33,7 +33,7 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
         this.ignoreCancelled = ignoreCancelled;
     }
 
-    private HandlerList reflectHandlerList() {
+    private HandlerList getHandlerList() {
         if(handlerList == null && !reflectionFailed) {
             try {
                 return (HandlerList)bukkitEventClass.getMethod("getHandlerList").invoke(null);
@@ -45,12 +45,12 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
             }
         }
 
-        return null;
+        return handlerList;
     }
 
     private void register() {
         if(super.handlerCount() > 0 && !eventRegistered) {
-            handlerList = reflectHandlerList();
+            handlerList = getHandlerList();
 
             //noinspection unchecked
             EventExecutor executor = (ignored, event) -> invoke(this, (T)event);
