@@ -1,6 +1,6 @@
 package io.github.zap.commons.keyvaluegetters;
 
-import io.github.zap.commons.utils.ClassUtils;
+import io.github.zap.commons.utils.ReflectionUtils;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
@@ -31,7 +31,7 @@ class DeserializerEngineImpl implements DeserializerEngine {
     @Override
     @SuppressWarnings("unchecked")
     public <T> ValueDeserializer<T> getDeserializerFor(Class<? extends T> clazz) {
-        var targetClazz = ClassUtils.nearestDescendant(clazz, deserializers.keySet());
+        var targetClazz = ReflectionUtils.nearestSubclass(clazz, deserializers.keySet());
         return (ValueDeserializer<T>) deserializers.get(targetClazz);
     }
 

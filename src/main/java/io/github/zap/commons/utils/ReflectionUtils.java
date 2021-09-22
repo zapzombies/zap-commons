@@ -7,9 +7,30 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.util.*;
 
-public class ClassUtils {
+/**
+ * Helper class for dealing with shitty Java reflection
+ */
+public class ReflectionUtils {
+    /**
+     * Get the nearest superclass (including itself) from a set of classes
+     * @param target target class
+     * @param classes the set of classes
+     * @return the nearest superclass
+     */
     @Nullable
-    public static Class<?> nearestAncestor(@NotNull Class<?> target, @NotNull Set<Class<?>> classes) {
+    public static Class<?> nearestSuperclass(@NotNull Class<?> target, @NotNull Set<Class<?>> classes) {
+        return nearestSuperclass(target, classes, true);
+    }
+
+    /**
+     * Get the nearest superclass from a set of classes
+     * @param target target class
+     * @param classes the set of classes
+     * @param includeSelf exclude target class from the set of classes
+     * @return the nearest superclass
+     */
+    @Nullable
+    public static Class<?> nearestSuperclass(@NotNull Class<?> target, @NotNull Set<Class<?>> classes, boolean includeSelf) {
         Objects.requireNonNull(target, "target cannot be null!");
         Objects.requireNonNull(classes, "classes cannot be null!");
 
@@ -18,7 +39,8 @@ public class ClassUtils {
         for(var item : classes) {
             if(item.isAssignableFrom(target)) {
                 if(result == null || result.isAssignableFrom(item)) {
-                    result = item;
+                    if(!includeSelf || item != target)
+                        result = item;
                 }
             }
         }
@@ -26,8 +48,26 @@ public class ClassUtils {
         return result;
     }
 
+    /**
+     * Get the nearest subclass (including itself) from a set of classes
+     * @param target target class
+     * @param classes the set of classes
+     * @return the nearest subclass
+     */
     @Nullable
-    public static Class<?> nearestDescendant(@NotNull Class<?> target, @NotNull Set<Class<?>> classes) {
+    public static Class<?> nearestSubclass(@NotNull Class<?> target, @NotNull Set<Class<?>> classes) {
+        return nearestSubclass(target, classes, true);
+    }
+
+    /**
+     * Get the nearest subclass from a set of classes
+     * @param target target class
+     * @param classes the set of classes
+     * @param includeSelf exclude target class from the set of classes
+     * @return the nearest subclass
+     */
+    @Nullable
+    public static Class<?> nearestSubclass(@NotNull Class<?> target, @NotNull Set<Class<?>> classes, boolean includeSelf) {
         Objects.requireNonNull(target, "target cannot be null!");
         Objects.requireNonNull(classes, "classes cannot be null!");
 
@@ -36,7 +76,8 @@ public class ClassUtils {
         for(var item : classes) {
             if(target.isAssignableFrom(item)) {
                 if(result == null || item.isAssignableFrom(result)) {
-                    result = item;
+                    if(!includeSelf || item != target)
+                        result = item;
                 }
             }
         }
@@ -44,19 +85,27 @@ public class ClassUtils {
         return result;
     }
 
+
+    /**
+     * Get the type parameters of a specified class for a given subclass.
+     * Eg. Get Iterator type params of an ArrayList
+     * @param clazz the subclass to search
+     * @param targetAncestor the target superclass
+     * @return a list of type params list, each nested list contains the ordered type params of the superclass
+     */
     @NotNull
-    public static List<List<? extends Class<?>>> getGenericAncestor(ParameterizedType clazz, Class<?> targetAncestor) {
+    public static List<List<? extends Class<?>>> getSuperclassTypeParams(ParameterizedType clazz, Class<?> targetAncestor) {
         Map<TypeVariable<?>, Class<?>> rootActualTypeArgs = new HashMap<>();
         var pt = clazz.getActualTypeArguments();
         var rawPt = ((Class<?>) clazz.getRawType()).getTypeParameters();
 
         for(var i = 0; i < pt.length; i++) {
-            rootActualTypeArgs.put(((TypeVariable<?>) rawPt[i]), (Class<?>) pt[i]);
+            rootActualTypeArgs.put(rawPt[i], (Class<?>) pt[i]);
         }
-        return GetGenericAncestorHelper.traverse(clazz, targetAncestor, rootActualTypeArgs);
+        return GetSuperClassTypeParamsHelper.traverse(clazz, targetAncestor, rootActualTypeArgs);
     }
 
-    static class GetGenericAncestorHelper {
+    static class GetSuperClassTypeParamsHelper {
         @NotNull
         private static List<List<? extends Class<?>>> traverse(
                 ParameterizedType parameterizedType,

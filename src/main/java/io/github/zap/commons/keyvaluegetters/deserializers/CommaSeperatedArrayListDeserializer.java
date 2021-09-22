@@ -1,10 +1,9 @@
 package io.github.zap.commons.keyvaluegetters.deserializers;
 
 import io.github.zap.commons.keyvaluegetters.DeserializerEngine;
-import io.github.zap.commons.keyvaluegetters.KeyField;
 import io.github.zap.commons.keyvaluegetters.OperationResult;
 import io.github.zap.commons.keyvaluegetters.ValueDeserializer;
-import io.github.zap.commons.utils.ClassUtils;
+import io.github.zap.commons.utils.ReflectionUtils;
 import io.github.zap.commons.utils.NonParameterizedType;
 import io.github.zap.commons.utils.StringUtils;
 
@@ -18,7 +17,7 @@ public class CommaSeperatedArrayListDeserializer implements ValueDeserializer<Ar
     @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
     public OperationResult<ArrayList<?>> deserialize(String value, ParameterizedType pt, DeserializerEngine engine) {
-        var typeParam = ClassUtils.getGenericAncestor(pt, Iterable.class).stream()
+        var typeParam = ReflectionUtils.getSuperclassTypeParams(pt, Iterable.class).stream()
                 .flatMap(Collection::stream)
                 .findFirst();
 
