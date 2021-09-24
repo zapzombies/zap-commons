@@ -2,8 +2,11 @@ package io.github.zap.commons.keyvaluegetters;
 
 import io.github.zap.commons.keyvaluegetters.deserializers.*;
 import io.github.zap.commons.keyvaluegetters.keytransformers.RetainKeyTransformer;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 /**
@@ -17,14 +20,15 @@ public interface KeyValueGetter {
      * @return a new instance of target type containing retrieved data
      * @throws GetFailedException errors during the operation
      */
-    <T> T get(Class<T> type) throws GetFailedException;
+    @NotNull
+    <T> T get(@NotNull Class<T> type) throws GetFailedException;
 
     /**
      * Retrieving data using the specified object as a template, the result will be assigned into its fields
      * @param o target object
      * @throws GetFailedException errors during the operation
      */
-    void bind(Object o) throws GetFailedException;
+    void bind(@NotNull Object o) throws GetFailedException;
 
     /**
      * Helper class to instantiate a {@link KeyValueGetter}
@@ -48,26 +52,33 @@ public interface KeyValueGetter {
             addDeserializer(ArrayList.class, new CommaSeperatedArrayListDeserializer());
         }
 
-        public Builder withKeyTransformation(KeyTransformer keyTransformer) {
+        @NotNull
+        public Builder withKeyTransformation(@NotNull KeyTransformer keyTransformer) {
+            Objects.requireNonNull(keyTransformer, "keyTransformer cannot be null!");
             this.keyTransformer = keyTransformer;
             return this;
         }
 
-        public Builder withDeserializerEngine(DeserializerEngine engine) {
+        @NotNull
+        public Builder withDeserializerEngine(@NotNull DeserializerEngine engine) {
+            Objects.requireNonNull(engine, "engine cannot be null!");
             this.deserializerEngine = engine;
             return this;
         }
 
-        public Builder withLogger(Logger logger) {
+        @NotNull
+        public Builder withLogger(@Nullable Logger logger) {
             this.logger = logger;
             return this;
         }
 
-        public <T> Builder addDeserializer(Class<T> clazz, ValueDeserializer<? extends T> deserializer) {
+        @NotNull
+        public <T> Builder addDeserializer(@NotNull Class<T> clazz, @NotNull ValueDeserializer<? extends T> deserializer) {
             getDeserializerEngine().addDeserializer(clazz, deserializer);
             return this;
         }
 
+        @NotNull
         public KeyTransformer getKeyTransformer() {
             return keyTransformer;
         }
@@ -76,12 +87,15 @@ public interface KeyValueGetter {
          * Build the {@link KeyValueGetter}
          * @return a configured {@link KeyValueGetter}
          */
+        @NotNull
         public abstract KeyValueGetter build();
 
+        @NotNull
         public Logger getLogger() {
             return logger;
         }
 
+        @NotNull
         public DeserializerEngine getDeserializerEngine() {
             return deserializerEngine;
         }

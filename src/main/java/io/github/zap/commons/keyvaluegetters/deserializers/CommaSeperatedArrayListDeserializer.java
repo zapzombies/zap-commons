@@ -6,8 +6,10 @@ import io.github.zap.commons.keyvaluegetters.ValueDeserializer;
 import io.github.zap.commons.utils.ReflectionUtils;
 import io.github.zap.commons.utils.NonParameterizedType;
 import io.github.zap.commons.utils.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.*;
 
 /**
@@ -16,15 +18,22 @@ import java.util.*;
 public class CommaSeperatedArrayListDeserializer implements ValueDeserializer<ArrayList<?>> {
     @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public OperationResult<ArrayList<?>> deserialize(String value, ParameterizedType pt, DeserializerEngine engine) {
-        var typeParam = ReflectionUtils.getSuperclassTypeParams(pt, Iterable.class).stream()
+    public @NotNull OperationResult<ArrayList<?>> deserialize(
+            @NotNull String value,
+            @NotNull ParameterizedType pt,
+            @NotNull DeserializerEngine engine) {
+        Objects.requireNonNull(value, "value cannot be null!");
+        Objects.requireNonNull(pt, "pt cannot be null!");
+        Objects.requireNonNull(engine, "engine cannot be null!");
+
+        Optional<? extends Type> typeParam = ReflectionUtils.getSuperclassTypeParams(pt, Iterable.class).stream()
                 .flatMap(Collection::stream)
                 .findFirst();
 
         if(typeParam.isPresent()) {
             ArrayList items = new ArrayList();
-            for(var item : StringUtils.fromCommaSeperated(value)) {
-                var result = typeParam.get() instanceof ParameterizedType childPt ?
+            for(String item : StringUtils.fromCommaSeperated(value)) {
+                OperationResult<Object> result = typeParam.get() instanceof ParameterizedType childPt ?
                         engine.deserialize(childPt, item) :
                         engine.deserialize(NonParameterizedType.fromClass((Class<?>) typeParam.get()), item);
                 if(result.isSuccess())

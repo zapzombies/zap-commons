@@ -1,6 +1,11 @@
 package io.github.zap.commons.utils;
 
+import com.google.common.base.Strings;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,7 +17,10 @@ public class StringUtils {
      * Comma seperated strings, comma can be included by prepending \
      * @param s input string
      */
-    public static List<String> fromCommaSeperated(String s) {
+    @NotNull
+    public static List<String> fromCommaSeperated(@Nullable String s) {
+        if(Strings.isNullOrEmpty(s))
+            return Collections.singletonList(s);
         List<String> result = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
         Optional<Character> lastCharacter = Optional.of(s.charAt(0));
