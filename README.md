@@ -1,5 +1,5 @@
 # zap-commons (Readme is under development)
-This repository is contains commonly used classes in our project
+This repository is contains commonly used classes in our project. 
 
 ## Setup
 What you will need
