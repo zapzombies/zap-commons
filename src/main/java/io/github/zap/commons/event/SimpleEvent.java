@@ -156,7 +156,7 @@ public class SimpleEvent<T> implements Event<T> {
             modifications.clear();
 
             if(removedAny) {
-                rebuild = true;
+                rebuild();
             }
 
             if(oldSize != size) {
@@ -227,11 +227,8 @@ public class SimpleEvent<T> implements Event<T> {
     @Override
     public void removeHandler(@NotNull EventHandler<T> handler) {
         if(!invoking) {
-            int oldSize = size;
-            removeHandlerInternal(handler);
-            if(oldSize != size) {
+            if(removeHandlerInternal(handler)) {
                 rebuild = true;
-                onHandlerCountChange(oldSize, size);
             }
         }
         else {
