@@ -130,6 +130,9 @@ public class SimpleEvent<T> implements Event<T> {
         }
 
         size = newSize;
+        if(bakedHandlers.length - size > bakedHandlers.length >> 1) {
+            bakedHandlers = Arrays.copyOf(bakedHandlers, size + 1);
+        }
     }
 
     private void processModifications() {
@@ -141,22 +144,20 @@ public class SimpleEvent<T> implements Event<T> {
                 modifications.remove(0);
             }
 
-            boolean removedAny = false;
             int firstRemovedIndex = -1;
             for(HandlerModification modification : modifications) {
                 int thisIndex;
                 if(modification.isAdd) {
                     addHandlerInternal(modification.handler);
                 }
-                else if((thisIndex = removeHandlerInternal(modification.handler)) != -1 && !removedAny) {
+                else if((thisIndex = removeHandlerInternal(modification.handler)) != -1 && firstRemovedIndex == -1) {
                     firstRemovedIndex = thisIndex;
-                    removedAny = true;
                 }
             }
 
             modifications.clear();
 
-            if(removedAny) {
+            if(firstRemovedIndex != -1) {
                 rebuild(firstRemovedIndex);
             }
 
