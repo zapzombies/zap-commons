@@ -9,23 +9,23 @@ import org.jetbrains.annotations.NotNull;
  * A reload-sensitive plugin. Provides events for loading, enabling, and disabling.
  * @param <T> The subclass type
  */
-public abstract class ReloadablePlugin<T extends ReloadablePlugin<T>> extends ZapPlugin {
+public abstract class ReloadablePlugin<T extends ReloadablePlugin<T>> extends BaseZapPlugin {
     private final Event<T> loadEvent = new SimpleEvent<>();
     private final Event<T> enableEvent = new SimpleEvent<>();
     private final Event<T> disableEvent = new SimpleEvent<>();
 
     @Override
-    final void doLoad() {
+    public final void doLoad() {
         loadEvent.invoke(this, getPlugin());
     }
 
     @Override
-    final void doEnable() {
+    public final void doEnable() {
         enableEvent.invoke(this, getPlugin());
     }
 
     @Override
-    final void doDisable() {
+    public final void doDisable() {
         disableEvent.invoke(this, getPlugin());
     }
 
