@@ -60,8 +60,9 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
                 handlerList.register(registeredListener);
             }
             else {
-                plugin.getServer().getPluginManager().registerEvent(bukkitEventClass, listener, priority,
-                        executor, plugin, ignoreCancelled);
+                plugin.getServer().getPluginManager().registerEvent(bukkitEventClass, listener, priority, executor,
+                        plugin, ignoreCancelled);
+                HandlerList.bakeAll();
             }
 
             eventRegistered = true;
@@ -82,22 +83,13 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     }
 
     @Override
-    public void invoke(Object sender, T args) {
-        super.invoke(sender, args);
-        register();
-        unregister();
-    }
-
-    @Override
     public void addHandler(@NotNull EventHandler<T> handler) {
         super.addHandler(handler);
-        register();
     }
 
     @Override
     public void removeHandler(@NotNull EventHandler<T> handler) {
         super.removeHandler(handler);
-        unregister();
     }
 
     @Override
@@ -108,11 +100,22 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     @Override
     public void clearHandlers() {
         super.clearHandlers();
-        unregister();
     }
 
     @Override
     public int handlerCount() {
         return super.handlerCount();
+    }
+
+    @Override
+    protected void onHandlerCountChange(int oldSize, int newSize) {
+        super.onHandlerCountChange(oldSize, newSize);
+
+        if(oldSize > 0 && newSize == 0) {
+            unregister();
+        }
+        else if(oldSize == 0 && newSize > 0) {
+            register();
+        }
     }
 }

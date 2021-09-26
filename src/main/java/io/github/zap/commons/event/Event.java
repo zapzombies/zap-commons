@@ -178,7 +178,8 @@ public interface Event<T> {
     }
 
     /**
-     * Applies a filter to this event. Any arguments not matching the predicate will fail to invoke handlers.
+     * Applies a filter to this event. Any arguments not matching the predicate will fail to invoke handlers. The
+     * returned event will otherwise have the same implementation characteristics as this one.
      * @param predicate The predicate to test arguments against
      * @return The new event
      */
@@ -196,7 +197,8 @@ public interface Event<T> {
     }
 
     /**
-     * Links this event to another event. The other event's handlers will be invoked directly after this event's.
+     * Links this event to another event. The other event's handlers will be invoked directly after this event's. The
+     * returned event will otherwise have the same implementation characteristics as this one.
      * @param other The event to link to
      * @return A wrapper for this event, which is linked to the provided event
      */
@@ -216,7 +218,7 @@ public interface Event<T> {
     /**
      * Maps this event to an event of another type. Similarly to {@link Event#linkTo(Event)}, the other event's handlers
      * will be invoked directly after this one. The provided mapping function will be used to convert between the
-     * different types.
+     * different types. Otherwise, the returned event will have the same implementation characteristics as this one.
      * @param other The event to map calls to
      * @param mapper The mapping function
      * @param <V> The type the other event receives

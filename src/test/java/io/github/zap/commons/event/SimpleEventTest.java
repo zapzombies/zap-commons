@@ -4,8 +4,6 @@ import org.apache.commons.lang.mutable.MutableInt;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class SimpleEventTest {
     private final ExceptionHandler handler = exception -> {
         throw exception;
