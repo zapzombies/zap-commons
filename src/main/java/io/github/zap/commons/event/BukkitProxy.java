@@ -62,7 +62,6 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
             else {
                 plugin.getServer().getPluginManager().registerEvent(bukkitEventClass, listener, priority, executor,
                         plugin, ignoreCancelled);
-                HandlerList.bakeAll();
             }
 
             eventRegistered = true;
