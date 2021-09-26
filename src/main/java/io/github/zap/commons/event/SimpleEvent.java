@@ -55,7 +55,6 @@ public class SimpleEvent<T> implements Event<T> {
 
     private int size = 0;
     private boolean invoking = false;
-    private boolean rebuild = false;
 
     public SimpleEvent(@NotNull ExceptionHandler exceptionHandler, int initialCapacity) {
         Validate.isTrue(initialCapacity >= 0, "initialCapacity cannot be negative");
@@ -85,15 +84,15 @@ public class SimpleEvent<T> implements Event<T> {
         bakedHandlers[size++] = handler;
     }
 
-    private boolean removeHandlerInternal(EventHandler<T> handler) {
+    private int removeHandlerInternal(EventHandler<T> handler) {
         for(int i = 0; i < size; i++) {
             if(bakedHandlers[i] == handler) {
                 bakedHandlers[i] = null;
-                return true;
+                return i;
             }
         }
 
-        return false;
+        return -1;
     }
 
     private boolean clearHandlersInternal() {
@@ -106,11 +105,11 @@ public class SimpleEvent<T> implements Event<T> {
         return false;
     }
 
-    private void rebuild() {
+    private void rebuild(int start) {
         int previousNull = -1;
         boolean hasPreviousNull = false;
         int newSize = size;
-        for(int i = 0; i < size; i++) {
+        for(int i = start; i < size; i++) {
             EventHandler handler = bakedHandlers[i];
 
             if(hasPreviousNull) {
@@ -131,7 +130,6 @@ public class SimpleEvent<T> implements Event<T> {
         }
 
         size = newSize;
-        rebuild = false;
     }
 
     private void processModifications() {
@@ -144,11 +142,14 @@ public class SimpleEvent<T> implements Event<T> {
             }
 
             boolean removedAny = false;
+            int firstRemovedIndex = -1;
             for(HandlerModification modification : modifications) {
+                int thisIndex;
                 if(modification.isAdd) {
                     addHandlerInternal(modification.handler);
                 }
-                else if(removeHandlerInternal(modification.handler)) {
+                else if((thisIndex = removeHandlerInternal(modification.handler)) != -1 && !removedAny) {
+                    firstRemovedIndex = thisIndex;
                     removedAny = true;
                 }
             }
@@ -156,16 +157,12 @@ public class SimpleEvent<T> implements Event<T> {
             modifications.clear();
 
             if(removedAny) {
-                rebuild();
+                rebuild(firstRemovedIndex);
             }
 
             if(oldSize != size) {
                 onHandlerCountChange(oldSize, size);
             }
-        }
-
-        if(rebuild) {
-            rebuild();
         }
     }
 
@@ -227,8 +224,14 @@ public class SimpleEvent<T> implements Event<T> {
     @Override
     public void removeHandler(@NotNull EventHandler<T> handler) {
         if(!invoking) {
-            if(removeHandlerInternal(handler)) {
-                rebuild = true;
+            int removedIndex;
+            if((removedIndex = removeHandlerInternal(handler)) != -1) {
+                int oldSize = size;
+                rebuild(removedIndex);
+
+                if(oldSize != size) {
+                    onHandlerCountChange(oldSize, size);
+                }
             }
         }
         else {
@@ -276,12 +279,9 @@ public class SimpleEvent<T> implements Event<T> {
     protected void onHandlerCountChange(int oldSize, int newSize) {}
 
     /**
-     * Called internally just before handlers will be called. The default implementation ensures that the internal array
-     * of handlers is up-to-date with any modifications that have been applied.
+     * Called internally just before handlers will be called. The default implementation does nothing.
      */
-    protected void preInvoke() {
-        processModifications();
-    }
+    protected void preInvoke() {}
 
     /**
      * Called internally directly after handlers are called (even if an exception is rethrown). The default
