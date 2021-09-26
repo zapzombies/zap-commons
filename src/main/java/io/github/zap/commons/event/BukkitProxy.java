@@ -20,7 +20,6 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     private final EventPriority priority;
     private final boolean ignoreCancelled;
 
-    private boolean eventRegistered = false;
     private boolean reflectionFailed = false;
     private HandlerList handlerList = null;
     private RegisteredListener registeredListener;
@@ -49,35 +48,27 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     }
 
     private void register() {
-        if(super.handlerCount() > 0 && !eventRegistered) {
-            handlerList = getHandlerList();
+        handlerList = getHandlerList();
 
-            //noinspection unchecked
-            EventExecutor executor = (ignored, event) -> invoke(this, (T)event);
+        //noinspection unchecked
+        EventExecutor executor = (ignored, event) -> invoke(this, (T)event);
 
-            if(handlerList != null) {
-                registeredListener = new RegisteredListener(listener, executor, priority, plugin, ignoreCancelled);
-                handlerList.register(registeredListener);
-            }
-            else {
-                plugin.getServer().getPluginManager().registerEvent(bukkitEventClass, listener, priority, executor,
-                        plugin, ignoreCancelled);
-            }
-
-            eventRegistered = true;
+        if(handlerList != null) {
+            registeredListener = new RegisteredListener(listener, executor, priority, plugin, ignoreCancelled);
+            handlerList.register(registeredListener);
+        }
+        else {
+            plugin.getServer().getPluginManager().registerEvent(bukkitEventClass, listener, priority, executor,
+                    plugin, ignoreCancelled);
         }
     }
 
     private void unregister() {
-        if(super.handlerCount() == 0 && eventRegistered) {
-            if(handlerList != null) {
-                handlerList.unregister(registeredListener);
-            }
-            else {
-                HandlerList.unregisterAll(listener);
-            }
-
-            eventRegistered = false;
+        if(handlerList != null) {
+            handlerList.unregister(registeredListener);
+        }
+        else {
+            HandlerList.unregisterAll(listener);
         }
     }
 
