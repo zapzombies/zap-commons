@@ -5,10 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 
 public class ReflectionUtilsTest {
@@ -26,7 +23,7 @@ public class ReflectionUtilsTest {
 
     @Test
     public void interfaceTarget() throws NoSuchFieldException {
-        var result = ReflectionUtils.getSuperclassTypeParams(
+        List<List<? extends Type>> result = ReflectionUtils.getSuperclassTypeParams(
                 (ParameterizedType) TestClassModel.class.getDeclaredField("singleParams").getGenericType(),
                 Iterable.class);
 
@@ -36,7 +33,7 @@ public class ReflectionUtilsTest {
 
     @Test
     public void classTarget() throws NoSuchFieldException {
-        var result = ReflectionUtils.getSuperclassTypeParams(
+        List<List<? extends Type>> result = ReflectionUtils.getSuperclassTypeParams(
                 (ParameterizedType) TestClassModel.class.getDeclaredField("singleParams").getGenericType(),
                 AbstractList.class);
 
@@ -46,7 +43,7 @@ public class ReflectionUtilsTest {
 
     @Test
     public void multipleNestedParams() throws NoSuchFieldException {
-        var result = ReflectionUtils.getSuperclassTypeParams(
+        List<List<? extends Type>> result = ReflectionUtils.getSuperclassTypeParams(
                 (ParameterizedType) TestClassModel.class.getDeclaredField("multipleNestedParams").getGenericType(),
                 Map.class);
 
@@ -57,7 +54,7 @@ public class ReflectionUtilsTest {
 
     @Test
     public void incorrectSuperclass() throws NoSuchFieldException {
-        var result = ReflectionUtils.getSuperclassTypeParams(
+        List<List<? extends Type>> result = ReflectionUtils.getSuperclassTypeParams(
                 (ParameterizedType) TestClassModel.class.getDeclaredField("multipleNestedParams").getGenericType(),
                 Iterable.class);
 
@@ -66,7 +63,7 @@ public class ReflectionUtilsTest {
 
     @Test
     public void concreteTypeParams() throws NoSuchFieldException {
-        var result = ReflectionUtils.getSuperclassTypeParams(
+        List<List<? extends Type>> result = ReflectionUtils.getSuperclassTypeParams(
                 NonParameterizedType.fromClass(TestClassModel.class.getDeclaredField("concreteTypeParams").getType()),
                 Iterable.class);
 
@@ -76,7 +73,7 @@ public class ReflectionUtilsTest {
 
     @Test
     public void inheritedConcreteTypeParams() throws NoSuchFieldException {
-        var result = ReflectionUtils.getSuperclassTypeParams(
+        List<List<? extends Type>> result = ReflectionUtils.getSuperclassTypeParams(
                 NonParameterizedType.fromClass(TestClassModel.class.getDeclaredField("inheritedConcreteTypeParams").getType()),
                 Iterable.class);
 

@@ -1,10 +1,13 @@
 package io.github.zap.commons.keyvaluegetters;
 
 import io.github.zap.commons.utils.ReflectionUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -15,9 +18,11 @@ class DeserializerEngineImpl implements DeserializerEngine {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> OperationResult<T> deserialize(ParameterizedType pt, String s) {
+    public <T> @Nullable OperationResult<T> deserialize(@NotNull ParameterizedType pt, @NotNull String s) {
+        Objects.requireNonNull(pt, "pt cannot be null!");
+        Objects.requireNonNull(s, "s cannot be null!");
         try {
-            var deserializer = getDeserializerFor((Class<?>) pt.getRawType());
+            ValueDeserializer<?> deserializer = getDeserializerFor((Class<?>) pt.getRawType());
             if(deserializer != null) {
                 return (OperationResult<T>)deserializer.deserialize(s, pt, this);
             } else {
@@ -30,23 +35,26 @@ class DeserializerEngineImpl implements DeserializerEngine {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> ValueDeserializer<T> getDeserializerFor(Class<? extends T> clazz) {
-        var targetClazz = ReflectionUtils.nearestSubclass(clazz, deserializers.keySet());
+    public <T> @Nullable ValueDeserializer<T> getDeserializerFor(@NotNull Class<? extends T> clazz) {
+        Objects.requireNonNull(clazz, "clazz cannot be null!");
+        Class<?> targetClazz = ReflectionUtils.nearestSubclass(clazz, deserializers.keySet());
         return (ValueDeserializer<T>) deserializers.get(targetClazz);
     }
 
     @Override
-    public <T> void addDeserializer(Class<T> clazz, ValueDeserializer<? extends T> deserializer) {
+    public <T> void addDeserializer(@NotNull Class<T> clazz, @Nullable ValueDeserializer<? extends T> deserializer) {
+        Objects.requireNonNull(clazz, "clazz cannot be null!");
         deserializers.put(clazz, deserializer);
     }
 
     @Override
-    public <T> void removeDeserializer(Class<T> clazz) {
+    public <T> void removeDeserializer(@NotNull Class<T> clazz) {
+        Objects.requireNonNull(clazz, "clazz cannot be null!");
         deserializers.remove(clazz);
     }
 
     @Override
-    public Set<Map.Entry<Class<?>, ValueDeserializer<?>>> getAllDeserializers() {
+    public @NotNull Set<Map.Entry<Class<?>, ValueDeserializer<?>>> getAllDeserializers() {
         return deserializers.entrySet();
     }
 

@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -40,7 +41,7 @@ public class ReflectionUtils {
 
         Class<?> result = null;
 
-        for(var item : classes) {
+        for(Class<?> item : classes) {
             if(item.isAssignableFrom(target)) {
                 if(result == null || result.isAssignableFrom(item)) {
                     if(!includeSelf || item != target)
@@ -77,10 +78,10 @@ public class ReflectionUtils {
 
         Class<?> result = null;
 
-        for(var item : classes) {
+        for(Class<?> item : classes) {
             if(target.isAssignableFrom(item)) {
                 if(result == null || item.isAssignableFrom(result)) {
-                    if(!includeSelf || item != target)
+                    if(includeSelf || item != target)
                         result = item;
                 }
             }
@@ -91,12 +92,37 @@ public class ReflectionUtils {
 
 
     /**
+     * Get all fields annotated with a specified annotation from a class
+     * @param target the class to retrieve fields
+     * @param annotation the annotation to look for
+     * @param <T> the type of the annotation
+     * @return A hashmap contains the matching {@link Field}
+     */
+    @NotNull
+    public static <T extends Annotation> Map<Field, T> getAnnotatedFields(@NotNull Class<?> target, @NotNull Class<T> annotation) {
+        Objects.requireNonNull(target, "target class cannot be null!");
+        Objects.requireNonNull(annotation, "target annotation cannot be null!");
+        Field[] fields = getFieldsUpTo(target, null);
+        HashMap<Field, T> resultMap = new HashMap<Field, T>();
+
+        for(int i = 0; i < fields.length; i++) {
+            T instance = fields[i].getAnnotation(annotation);
+            if(instance != null) {
+                resultMap.put(fields[i], instance);
+            }
+        }
+
+        return resultMap;
+    }
+
+    /**
      * get all declared fields from superclass and itself
      * @param type the class to search
      * @param exclusiveParent the superclass to search up to
      * @return a list of fields
      */
     public static Field[] getFieldsUpTo(@Nonnull Class<?> type, @Nullable Class<?> exclusiveParent) {
+        Objects.requireNonNull(type, "target type cannot be null!");
         Field[] result = type.getDeclaredFields();
 
         Class<?> parentClass = type.getSuperclass();
@@ -116,12 +142,14 @@ public class ReflectionUtils {
      * @return a list of type params list, each nested list contains the ordered type params of the superclass
      */
     @NotNull
-    public static List<List<? extends Type>> getSuperclassTypeParams(ParameterizedType clazz, Type targetAncestor) {
+    public static List<List<? extends Type>> getSuperclassTypeParams(@NotNull ParameterizedType clazz, @NotNull Type targetAncestor) {
+        Objects.requireNonNull(clazz, "clazz cannot be null!");
+        Objects.requireNonNull(targetAncestor, "targetAncestor cannot be null!");
         Map<TypeVariable<?>, Type> rootActualTypeArgs = new HashMap<>();
-        var pt = clazz.getActualTypeArguments();
-        var rawPt = ((Class<?>) clazz.getRawType()).getTypeParameters();
+        Type[] pt = clazz.getActualTypeArguments();
+        TypeVariable<?>[] rawPt = ((Class<?>) clazz.getRawType()).getTypeParameters();
 
-        for(var i = 0; i < pt.length; i++) {
+        for(int i = 0; i < pt.length; i++) {
             rootActualTypeArgs.put(rawPt[i], pt[i]);
         }
         return GetSuperClassTypeParamsHelper.traverse(clazz, targetAncestor, rootActualTypeArgs);
@@ -135,9 +163,9 @@ public class ReflectionUtils {
                 Type targetAncestor,
                 Map<TypeVariable<?>, Type> rootActualTypeArgs) {
             List<List<? extends Type>> resultBuffer = new ArrayList<>();
-            var rawType = (Class<?>) parameterizedType.getRawType();
+            Class<?> rawType = (Class<?>) parameterizedType.getRawType();
 
-            for(var interfaze : rawType.getGenericInterfaces()) {
+            for(Type interfaze : rawType.getGenericInterfaces()) {
                 resultBuffer.addAll(traverseSuperclass(interfaze, targetAncestor, rootActualTypeArgs));
             }
 
@@ -155,9 +183,9 @@ public class ReflectionUtils {
                     resultBuffer.addAll(traverse(pt, targetAncestor, updateRootTypeParams(rootActualTypeArgs, pt)));
                 }
             } else if (type instanceof Class<?> clazz) {
-                var child = clazz.getGenericSuperclass();
+                Type child = clazz.getGenericSuperclass();
                 if(child != null) {
-                    var ipt = child instanceof ParameterizedType ?
+                    ParameterizedType ipt = child instanceof ParameterizedType ?
                             (ParameterizedType) child :
                             NonParameterizedType.fromClass(((Class<?>) child));
                     resultBuffer.addAll(traverse(ipt, targetAncestor, updateRootTypeParams(rootActualTypeArgs, ipt)));
@@ -171,16 +199,16 @@ public class ReflectionUtils {
         private static Map<TypeVariable<?>, Type> updateRootTypeParams(
                 Map<TypeVariable<?>, Type> rootActualTypeArgs,
                 ParameterizedType pt) {
-            var actualTypesParams = pt.getActualTypeArguments();
-            var actualTypesParamsRoot = new Type[actualTypesParams.length];
-            var actualTypesParamsRootMap = new LinkedHashMap<TypeVariable<?>, Type>();
+            Type[] actualTypesParams = pt.getActualTypeArguments();
+            Type[] actualTypesParamsRoot = new Type[actualTypesParams.length];
+            LinkedHashMap<TypeVariable<?>, Type> actualTypesParamsRootMap = new LinkedHashMap<TypeVariable<?>, Type>();
             for(int i = 0; i < actualTypesParams.length; i++) {
                 actualTypesParamsRoot[i] = actualTypesParams[i] instanceof Class<?> actualClassParam ?
                         actualClassParam :
                         rootActualTypeArgs.get((TypeVariable<?>) actualTypesParams[i]);
             }
 
-            var rawPt = ((Class<?>) pt.getRawType()).getTypeParameters();
+            TypeVariable<?>[] rawPt = ((Class<?>) pt.getRawType()).getTypeParameters();
             for (int i = 0; i < rawPt.length; i++) {
                 actualTypesParamsRootMap.put(rawPt[i], actualTypesParamsRoot[i]);
             }

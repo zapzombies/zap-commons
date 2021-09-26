@@ -1,12 +1,13 @@
 package io.github.zap.commons.keyvaluegetters;
 
-import io.github.zap.commons.utils.NonParameterizedType;
+import io.github.zap.commons.utils.ReflectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Base class for some {@link KeyValueGetter}, contains the default process to locate, deserialize and bind to fields
@@ -20,7 +21,9 @@ public abstract class AbstractKeyValueGetter implements KeyValueGetter {
     }
 
     @Override
-    public <T> T get(Class<T> type) throws GetFailedException {
+    @NotNull
+    public <T> T get(@NotNull Class<T> type) throws GetFailedException {
+        Objects.requireNonNull(type, "type cannot be null!");
         try {
             T object = type.getConstructor().newInstance();
             bind(object);
@@ -31,19 +34,21 @@ public abstract class AbstractKeyValueGetter implements KeyValueGetter {
     }
 
     @Override
-    public void bind(Object o) throws GetFailedException {
-        var faultyGetOperation = new ArrayList<ImmutablePair<KeyField, OperationResult<String>>>();
-        var faultyDeserializeOperation = new ArrayList<ImmutablePair<KeyField, OperationResult<?>>>();
-        var faultyBindOperation = new ArrayList<ImmutablePair<KeyField, OperationResult<?>>>();
-        for(var item : getKeyFields(o.getClass())) {
-            var getResult = ImmutablePair.of(item, getFieldValue(item));
+    public void bind(@NotNull Object object) throws GetFailedException {
+        Objects.requireNonNull(object, "object cannot be null!");
+
+        ArrayList<ImmutablePair<KeyField, OperationResult<String>>> faultyGetOperation = new ArrayList<ImmutablePair<KeyField, OperationResult<String>>>();
+        ArrayList<ImmutablePair<KeyField, OperationResult<?>>> faultyDeserializeOperation = new ArrayList<ImmutablePair<KeyField, OperationResult<?>>>();
+        ArrayList<ImmutablePair<KeyField, OperationResult<?>>> faultyBindOperation = new ArrayList<ImmutablePair<KeyField, OperationResult<?>>>();
+        for(KeyField item : getKeyFields(object.getClass())) {
+            ImmutablePair<KeyField, OperationResult<String>> getResult = ImmutablePair.of(item, getFieldValue(item));
             if(getResult.getRight().isSuccess()) {
-                var rawValue = getResult.getRight().result().get();
-                var kf = getResult.getLeft();
-                var deserializeResult = builder.getDeserializerEngine().deserialize(kf.parameterizedType(), rawValue);
+                String rawValue = getResult.getRight().result().get();
+                KeyField kf = getResult.getLeft();
+                OperationResult<Object> deserializeResult = builder.getDeserializerEngine().deserialize(kf.parameterizedType(), rawValue);
                 if(deserializeResult.isSuccess()) {
                     try {
-                        o.getClass().getDeclaredField(kf.fieldName()).set(o, deserializeResult.result().get());
+                        object.getClass().getDeclaredField(kf.fieldName()).set(object, deserializeResult.result().get());
                     } catch (NoSuchFieldException | IllegalAccessException e) {
                         faultyBindOperation.add(ImmutablePair.of(kf, OperationResult.error(e)));
                     }
@@ -118,20 +123,20 @@ public abstract class AbstractKeyValueGetter implements KeyValueGetter {
      * @param clazz target class
      * @return a set contains all key declared of the class
      */
-    protected Set<KeyField> getKeyFields(Class<?> clazz) {
+    @NotNull
+    protected Set<KeyField> getKeyFields(@NotNull Class<?> clazz) {
         if (cachedKeyFields.containsKey(clazz)) {
             return cachedKeyFields.get(clazz);
         } else {
-            Set<KeyField> result = Arrays.stream(clazz.getDeclaredFields())
-                    .filter(f -> f.getAnnotation(KeyDeclaration.class) != null)
-                    .map(f -> {
-                        KeyDeclaration kd = f.getAnnotation(KeyDeclaration.class);
-                        String keyName = StringUtils.isNotEmpty(kd.name()) ?
-                                kd.name() :
-                                builder.getKeyTransformer().transform(f.getName());
-                        return new KeyField(f.getName(), keyName, NonParameterizedType.fromField(f), kd.required(), kd.description());
-                    })
-                    .collect(Collectors.toSet());
+            Set<KeyField> result = new HashSet<>();
+            for(Map.Entry<Field, KeyDeclaration> item : ReflectionUtils.getAnnotatedFields(clazz, KeyDeclaration.class).entrySet()) {
+                String keyName = StringUtils.isNotEmpty(item.getValue().name()) ?
+                        item.getValue().name() :
+                        builder.getKeyTransformer().transform(item.getKey().getName());
+
+                result.add(new KeyField(item.getKey(), keyName, item.getValue()));
+            }
+
             cachedKeyFields.put(clazz, result);
             return result;
         }
@@ -142,5 +147,6 @@ public abstract class AbstractKeyValueGetter implements KeyValueGetter {
      * @param kf key to retrieve value
      * @return result of this operation
      */
-    protected abstract OperationResult<String> getFieldValue(KeyField kf);
+    @NotNull
+    protected abstract OperationResult<String> getFieldValue(@NotNull KeyField kf);
 }

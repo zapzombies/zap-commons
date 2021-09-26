@@ -1,5 +1,8 @@
 package io.github.zap.commons.keyvaluegetters;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.lang.reflect.ParameterizedType;
 import java.util.Map;
 import java.util.Set;
@@ -10,41 +13,41 @@ import java.util.Set;
 public interface DeserializerEngine {
     /**
      * Convert a string to the specified type, using {@link ValueDeserializer}s that this instance manages
+     * @param <T> result type
      * @param pt type to convert to
      * @param s input string
-     * @param <T> result type
      * @return operation result
      */
-    <T> OperationResult<T> deserialize(ParameterizedType pt, String s);
+    <T> @Nullable OperationResult<T> deserialize(@NotNull ParameterizedType pt, @NotNull String s);
 
     /**
      * Get the matching {@link ValueDeserializer} capable of deserializing to the specified type
-     * @param clazz target type
      * @param <T> target type
+     * @param clazz target type
      * @return the matching {@link ValueDeserializer}
      */
-    <T> ValueDeserializer<T> getDeserializerFor(Class<? extends T> clazz);
+    <T> @Nullable ValueDeserializer<T> getDeserializerFor(@NotNull Class<? extends T> clazz);
 
     /**
      * Add a {@link ValueDeserializer} to this instance
+     * @param <T> result type
      * @param clazz class to deserialize
      * @param deserializer a {@link ValueDeserializer}
-     * @param <T> result type
      */
-    <T> void addDeserializer(Class<T> clazz, ValueDeserializer<? extends T> deserializer);
+    <T> void addDeserializer(@NotNull Class<T> clazz, @Nullable ValueDeserializer<? extends T> deserializer);
 
     /**
      * Remove {@link ValueDeserializer}(s) from this instance
-     * @param clazz target type
      * @param <T> target type
+     * @param clazz target type
      */
-    <T> void removeDeserializer(Class<T> clazz);
+    <T> void removeDeserializer(@NotNull Class<T> clazz);
 
     /**
      * Get all {@link ValueDeserializer}s this instance manages
      * @return a set of {@link ValueDeserializer}s
      */
-    Set<Map.Entry<Class<?>, ValueDeserializer<?>>> getAllDeserializers();
+    @NotNull Set<Map.Entry<Class<?>, ValueDeserializer<?>>> getAllDeserializers();
 
     /**
      * Clear all {@link ValueDeserializer}s this class manages

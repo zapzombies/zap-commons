@@ -21,7 +21,7 @@ public class NonParameterizedType implements ParameterizedType {
     }
 
     public static ParameterizedType fromField(Field field) {
-        var t = field.getGenericType();
+        Type t = field.getGenericType();
         return t instanceof ParameterizedType pt ? pt : fromClass(field.getType());
     }
 

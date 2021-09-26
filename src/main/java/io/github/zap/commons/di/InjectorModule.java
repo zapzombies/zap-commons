@@ -5,6 +5,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 /**
  * A Injector factory that define necessary components and services for a plugin.
@@ -15,7 +18,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class InjectorModule<T extends JavaPlugin> extends AbstractModule {
     protected final T plugin;
 
-    public InjectorModule(T plugin) {
+    public InjectorModule(@NotNull T plugin) {
+        Objects.requireNonNull(plugin, "plugin cannot be null!");
         this.plugin = plugin;
     }
 
@@ -23,6 +27,7 @@ public class InjectorModule<T extends JavaPlugin> extends AbstractModule {
      * Create an injector with the declared dependencies
      * @return a configured injector
      */
+    @NotNull
     public Injector createInjector() {
         return Guice.createInjector(this);
     }
@@ -33,6 +38,7 @@ public class InjectorModule<T extends JavaPlugin> extends AbstractModule {
      * @return plugin declared in this instance
      */
     @Provides
+    @NotNull
     public T providesPlugin() {
         return plugin;
     }

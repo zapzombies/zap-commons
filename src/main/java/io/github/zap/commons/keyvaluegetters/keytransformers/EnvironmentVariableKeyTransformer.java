@@ -1,16 +1,21 @@
 package io.github.zap.commons.keyvaluegetters.keytransformers;
 
 import io.github.zap.commons.keyvaluegetters.KeyTransformer;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 /**
  * This class transform camelCase, PascalCase into uppercase,snake_case name
  */
 public class EnvironmentVariableKeyTransformer implements KeyTransformer {
     @Override
-    public String transform(String name) {
+    public @NotNull String transform(@NotNull String name) {
+        Objects.requireNonNull(name, "name cannot be null!");
+
         StringBuilder nameBuilder = new StringBuilder();
         StringBuilder wordBuilder = new StringBuilder();
-        for(var character : name.toCharArray()) {
+        for(char character : name.toCharArray()) {
             if (Character.isUpperCase(character)) {
                 if(wordBuilder.isEmpty()) {
                     wordBuilder.append(character);

@@ -1,6 +1,9 @@
 package io.github.zap.commons.keyvaluegetters;
 
 import io.github.zap.commons.keyvaluegetters.keytransformers.EnvironmentVariableKeyTransformer;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 /**
  * A {@link KeyValueGetter} that using Environment Variables as its source
@@ -11,7 +14,8 @@ public class EnvironmentVariableGetter extends AbstractKeyValueGetter {
     }
 
     @Override
-    protected OperationResult<String> getFieldValue(KeyField kf) {
+    protected @NotNull OperationResult<String> getFieldValue(@NotNull KeyField kf) {
+        Objects.requireNonNull(kf, "kf cannot be null!");
         String value = System.getenv(kf.keyName());
         return value != null ?
                 OperationResult.of(value) :
@@ -28,6 +32,7 @@ public class EnvironmentVariableGetter extends AbstractKeyValueGetter {
         }
 
         @Override
+        @NotNull
         public EnvironmentVariableGetter build() {
             return new EnvironmentVariableGetter(this);
         }
