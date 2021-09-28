@@ -1,7 +1,5 @@
 package io.github.zap.commons.event;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * Functional interface representing an event handler.
  * @param <T> The type of argument the event handler receives

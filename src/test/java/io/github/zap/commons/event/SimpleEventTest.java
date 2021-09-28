@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class SimpleEventTest {
-    private final ExceptionHandler handler = exception -> {
+    private static final ExceptionHandler handler = exception -> {
         throw exception;
     };
 
@@ -158,5 +158,19 @@ class SimpleEventTest {
         simpleEvent.addHandler(handler);
 
         Assertions.assertTrue(simpleEvent.hasHandler(handler));
+    }
+
+    @Test
+    void exception() {
+        MutableInt integer = new MutableInt();
+        simpleEvent.addHandler((sender, args) -> integer.increment());
+        simpleEvent.addHandler((sender, args) -> {
+            integer.increment();
+            throw new ArrayIndexOutOfBoundsException();
+        });
+        simpleEvent.addHandler((sender, args) -> integer.increment());
+
+        Assertions.assertThrows(ArrayIndexOutOfBoundsException.class, () -> simpleEvent.invoke(this, 0));
+        Assertions.assertSame(3, integer.intValue());
     }
 }

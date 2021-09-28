@@ -48,7 +48,7 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     }
 
     private void register() {
-        handlerList = getHandlerList();
+        HandlerList handlerList = getHandlerList();
 
         //noinspection unchecked
         EventExecutor executor = (ignored, event) -> invoke(this, (T)event);
