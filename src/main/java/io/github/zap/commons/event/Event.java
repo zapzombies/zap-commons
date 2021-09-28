@@ -10,18 +10,18 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * Broadcasts events to all registered listeners.
+ * <p>Broadcasts events to all registered listeners.</p>
  *
- * The order in which handlers are executed is not specified and is left up to implementations. Thread-safety, or lack
- * thereof, is also implementation-dependent. Handlers are not guaranteed to be invoked on the same thread as the one
- * calling {@link Event#invoke(Object, Object)} (although implementations may offer this guarantee).
+ * <p>The order in which handlers are executed is not specified and is left up to implementations. Thread-safety, or
+ * lack thereof, is also implementation-dependent. Handlers are not guaranteed to be invoked on the same thread as the
+ * one calling {@link Event#invoke(Object, Object)} (although implementations may offer this guarantee).</p>
  *
- * Handlers may be added and removed at any time (even while other handlers are being called). Recursive invocation is
- * typically disallowed, but there is no requirement that this must be the case.
+ * <p>Handlers may be added and removed at any time (even while other handlers are being called). Recursive invocation
+ * is typically disallowed.</p>
  *
- * Events should, but are not required to use reference equality to compare {@link EventHandler} instances.
+ * <p>Events should, but are not required to use reference equality to compare {@link EventHandler} instances.</p>
  *
- * This class also contains a number of potentially useful utility methods.
+ * <p>This interface also holds a number of potentially useful utility methods.</p>
  * @param <T> The type of parameter event listeners must accept
  */
 public interface Event<T> {
@@ -71,20 +71,21 @@ public interface Event<T> {
     int handlerCount();
 
     /**
-     * Creates an Event implementation that proxies a Bukkit event (see {@link org.bukkit.event.Event}). Such
-     * "proxy events" will have their handlers invoked whenever the proxied Bukkit event is fired.
+     * <p>Creates an Event implementation that proxies a Bukkit event (see {@link org.bukkit.event.Event}). Such
+     * "proxy events" will have their handlers invoked whenever the proxied Bukkit event is fired.</p>
      *
-     * Registration with the Bukkit API will typically occur lazily, only when it is needed, so it is safe to create
-     * multiple proxy events.
+     * <p>Registration with the Bukkit API should occur lazily, only when handlers actually exist, so it is safe to
+     * create proxy events even if it is not guaranteed that they will be used.</p>
      *
-     * There is no thread safety by default, as the majority of Bukkit events are synchronous. For the few that aren't,
-     * use {@link Event#synchronize()}.
+     * <p>The returned event offers no thread safety by default, as the majority of Bukkit events are synchronous. For
+     * the few that aren't, use {@link Event#synchronize()}.</p>
      * @param plugin The plugin to register the proxied Bukkit event under
      * @param bukkitEventClass The class of the Bukkit event
      * @param priority The EventPriority
      * @param ignoreCancelled Whether this event ignores cancelled events
      * @param <T> The type of Bukkit event
      * @return An implementation of Event that is designed to proxy Bukkit's API
+     * @throws NullPointerException if any of the arguments are null
      */
     static <T extends org.bukkit.event.Event> Event<T> bukkitProxy(@NotNull Plugin plugin,
                                                                    @NotNull Class<T> bukkitEventClass,
@@ -103,6 +104,7 @@ public interface Event<T> {
      * @param ignoreCancelled Whether this event ignores cancelled events
      * @param <T> The type of Bukkit event
      * @return An implementation of Event that is designed to proxy Bukkit's API
+     * @throws NullPointerException if any of the arguments are null
      */
     static <T extends org.bukkit.event.Event> Event<T> bukkitProxy(@NotNull Plugin plugin,
                                                                    @NotNull Class<T> bukkitEventClass,
@@ -117,6 +119,7 @@ public interface Event<T> {
      * @param bukkitEventClass The class of the Bukkit event
      * @param <T> The type of Bukkit event
      * @return An implementation of Event that is designed to proxy Bukkit's API
+     * @throws NullPointerException if any of the arguments are null
      */
     static <T extends org.bukkit.event.Event> Event<T> bukkitProxy(@NotNull Plugin plugin,
                                                                    @NotNull Class<T> bukkitEventClass) {
@@ -227,9 +230,9 @@ public interface Event<T> {
     }
 
     /**
-     * <p>Creates a new event from this event, whose invoke method will call another event's handlers directly after
+     * Creates a new event from this event, whose invoke method will call another event's handlers directly after
      * this event's, and after applying a mapping function to the argument. Otherwise, this behaves identically to
-     * {@link Event#linkTo(Event)}</p>.
+     * {@link Event#linkTo(Event)}.
      * @param other The event to map calls to
      * @param mapper The mapping function
      * @param <V> The type the other event receives

@@ -37,12 +37,12 @@ import java.util.logging.Logger;
 public class SimpleEvent<T> implements Event<T> {
     private static final int DEFAULT_INITIAL_CAPACITY = 8;
 
-    private class HandlerModification {
+    private class Modification {
         private final boolean isAdd;
         private final boolean isClear;
         private final EventHandler<T> handler;
 
-        private HandlerModification(boolean isAdd, boolean isClear, EventHandler<T> handler) {
+        private Modification(boolean isAdd, boolean isClear, EventHandler<T> handler) {
             this.isAdd = isAdd;
             this.isClear = isClear;
             this.handler = handler;
@@ -51,7 +51,7 @@ public class SimpleEvent<T> implements Event<T> {
 
     private EventHandler[] bakedHandlers;
     private final ExceptionHandler exceptionHandler;
-    private final List<HandlerModification> modifications = new ArrayList<>();
+    private final List<Modification> modifications = new ArrayList<>();
     private final int initialCapacity;
 
     private int size = 0;
@@ -176,7 +176,7 @@ public class SimpleEvent<T> implements Event<T> {
             }
 
             int firstRemovedIndex = -1;
-            for(HandlerModification modification : modifications) {
+            for(Modification modification : modifications) {
                 int thisIndex;
                 if(modification.isAdd) {
                     addHandlerInternal(modification.handler);
@@ -250,7 +250,7 @@ public class SimpleEvent<T> implements Event<T> {
             }
         }
         else {
-            modifications.add(new HandlerModification(true, false, handler));
+            modifications.add(new Modification(true, false, handler));
         }
     }
 
@@ -266,7 +266,7 @@ public class SimpleEvent<T> implements Event<T> {
             }
         }
         else {
-            modifications.add(new HandlerModification(false, false, handler));
+            modifications.add(new Modification(false, false, handler));
         }
     }
 
@@ -292,7 +292,7 @@ public class SimpleEvent<T> implements Event<T> {
         }
         else {
             modifications.clear(); //remove all prior modifications (they would be cleared anyway)
-            modifications.add(new HandlerModification(false, true, null));
+            modifications.add(new Modification(false, true, null));
         }
     }
 
