@@ -23,7 +23,7 @@ import java.util.logging.Logger;
  *
  * <p>This class is not thread safe. Unlike many Java collections, it does <i>not</i> guarantee fail-fast behavior if
  * improper concurrent modifications are made. The user is responsible for ensuring thread safety by using synchronized
- * implementations when necessary. Events are called on the same thread that made the call to
+ * implementations when necessary. Event handlers are called on the same thread that made the call to
  * {@link SimpleEvent#invoke(Object, Object)}.</p>
  *
  * <p>SimpleEvent calls handlers in the same order that they are registered (FIFO). Adding, removing, and clearing

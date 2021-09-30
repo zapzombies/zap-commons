@@ -58,7 +58,7 @@ public abstract class BaseZapPlugin extends JavaPlugin {
     private void doTimedCall(ThrowableRunnable runnable, String startMsg, String successMsg, String failMsg, boolean disablePluginOnFail) {
         try {
             getLogger().info(startMsg);
-            long elapsed = TimeUtils.measure(this::doLoad);
+            long elapsed = TimeUtils.measure(runnable);
             getLogger().info(successMsg);
             getLogger().info(String.format("Time elapsed: %sms!", elapsed));
         } catch (Throwable e) {

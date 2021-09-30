@@ -1,12 +1,9 @@
 package io.github.zap.commons.vectors;
 
 /**
- * General interface for a class encapsulating three double values. Implementations of this interface are required to
- * be effectively immutable; ex. the returned value of x(), y(), and z() cannot change for the lifetime of the object.
+ * General interface for a class encapsulating three double values.
  */
 public interface Vector3D {
-    Vector3D ZERO = Vectors.of(0D, 0D, 0D);
-
     double x();
 
     double y();
