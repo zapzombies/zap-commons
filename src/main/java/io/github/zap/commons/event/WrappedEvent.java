@@ -4,6 +4,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
+/**
+ * Used internally by some utility methods in {@link Event}.
+ * @param <T> The type of argument the event receives
+ */
 class WrappedEvent<T> implements Event<T> {
      private final Event<T> wrapped;
 

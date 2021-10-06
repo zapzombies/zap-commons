@@ -23,7 +23,8 @@ import java.util.logging.Logger;
  *
  * <p>This class is not thread safe. Unlike many Java collections, it does <i>not</i> guarantee fail-fast behavior if
  * improper concurrent modifications are made. The user is responsible for ensuring thread safety by using synchronized
- * implementations when necessary.</p>
+ * implementations when necessary. Event handlers are called on the same thread that made the call to
+ * {@link SimpleEvent#invoke(Object, Object)}.</p>
  *
  * <p>SimpleEvent calls handlers in the same order that they are registered (FIFO). Adding, removing, and clearing
  * handlers also respect this order.</p>
@@ -36,12 +37,12 @@ import java.util.logging.Logger;
 public class SimpleEvent<T> implements Event<T> {
     private static final int DEFAULT_INITIAL_CAPACITY = 8;
 
-    private class HandlerModification {
+    private class Modification {
         private final boolean isAdd;
         private final boolean isClear;
         private final EventHandler<T> handler;
 
-        private HandlerModification(boolean isAdd, boolean isClear, EventHandler<T> handler) {
+        private Modification(boolean isAdd, boolean isClear, EventHandler<T> handler) {
             this.isAdd = isAdd;
             this.isClear = isClear;
             this.handler = handler;
@@ -49,30 +50,61 @@ public class SimpleEvent<T> implements Event<T> {
     }
 
     private EventHandler[] bakedHandlers;
-
     private final ExceptionHandler exceptionHandler;
-    private final List<HandlerModification> modifications = new ArrayList<>();
+    private final List<Modification> modifications = new ArrayList<>();
+    private final int initialCapacity;
 
     private int size = 0;
     private boolean invoking = false;
 
+    /**
+     * Creates a new SimpleEvent with the provided exception handler and initial capacity.
+     * @param exceptionHandler The exception handler to use
+     * @param initialCapacity The initial capacity
+     * @throws IllegalArgumentException if exceptionHandler is null, or initialCapacity is less than 0
+     */
     public SimpleEvent(@NotNull ExceptionHandler exceptionHandler, int initialCapacity) {
         Validate.isTrue(initialCapacity >= 0, "initialCapacity cannot be negative");
 
-        this.exceptionHandler = Objects.requireNonNull(exceptionHandler, "exceptionHandler cannot be null");
         this.bakedHandlers = new EventHandler[initialCapacity];
+        this.exceptionHandler = Objects.requireNonNull(exceptionHandler, "exceptionHandler cannot be null");
+        this.initialCapacity = initialCapacity;
     }
 
+    /**
+     * Creates a new SimpleEvent with the provided exception handler and default initial capacity (8).
+     * @param exceptionHandler The exception handler to use
+     * @throws IllegalArgumentException if exceptionHandler is null
+     */
     public SimpleEvent(@NotNull ExceptionHandler exceptionHandler) {
         this(exceptionHandler, DEFAULT_INITIAL_CAPACITY);
     }
 
+    /**
+     * Creates a new SimpleEvent, which will handle exceptions by logging them with the provided Logger
+     * (see {@link ExceptionHandlers#logHandler(Logger)}), and will use the default initial capacity (8).
+     * @param logger The logger to use
+     * @throws IllegalArgumentException if logger is null
+     */
     public SimpleEvent(@NotNull Logger logger) {
         this(ExceptionHandlers.logHandler(logger));
     }
 
+    /**
+     * Creates a new SimpleEvent, which handles exceptions by rethrowing them
+     * (see {@link ExceptionHandlers#rethrow()}), and the default initial capacity (8).
+     */
     public SimpleEvent() {
         this(ExceptionHandlers.rethrow());
+    }
+
+    private void trim() {
+        if(size < bakedHandlers.length >> 1) {
+            int newLength = Math.max(size + 1, initialCapacity);
+            if(newLength < bakedHandlers.length) {
+                bakedHandlers = Arrays.copyOf(bakedHandlers, newLength);
+            }
+        }
     }
 
     private void addHandlerInternal(EventHandler<T> handler) {
@@ -130,9 +162,7 @@ public class SimpleEvent<T> implements Event<T> {
         }
 
         size = newSize;
-        if(bakedHandlers.length - size > bakedHandlers.length >> 1) {
-            bakedHandlers = Arrays.copyOf(bakedHandlers, size + 1);
-        }
+        trim();
     }
 
     private void processModifications() {
@@ -145,7 +175,7 @@ public class SimpleEvent<T> implements Event<T> {
             }
 
             int firstRemovedIndex = -1;
-            for(HandlerModification modification : modifications) {
+            for(Modification modification : modifications) {
                 int thisIndex;
                 if(modification.isAdd) {
                     addHandlerInternal(modification.handler);
@@ -209,6 +239,7 @@ public class SimpleEvent<T> implements Event<T> {
 
     @Override
     public void addHandler(@NotNull EventHandler<T> handler) {
+        Objects.requireNonNull(handler, "handler cannot be null");
         if(!invoking) {
             int oldSize = size;
             addHandlerInternal(handler);
@@ -218,30 +249,29 @@ public class SimpleEvent<T> implements Event<T> {
             }
         }
         else {
-            modifications.add(new HandlerModification(true, false, handler));
+            modifications.add(new Modification(true, false, handler));
         }
     }
 
     @Override
     public void removeHandler(@NotNull EventHandler<T> handler) {
+        Objects.requireNonNull(handler, "handler cannot be null");
         if(!invoking) {
             int removedIndex;
             if((removedIndex = removeHandlerInternal(handler)) != -1) {
                 int oldSize = size;
                 rebuild(removedIndex);
-
-                if(oldSize != size) {
-                    onHandlerCountChange(oldSize, size);
-                }
+                onHandlerCountChange(oldSize, size);
             }
         }
         else {
-            modifications.add(new HandlerModification(false, false, handler));
+            modifications.add(new Modification(false, false, handler));
         }
     }
 
     @Override
     public boolean hasHandler(@NotNull EventHandler<T> handler) {
+        Objects.requireNonNull(handler, "handler cannot be null");
         for(int i = 0; i < size; i++) {
             if(bakedHandlers[i] == handler) {
                 return true;
@@ -256,12 +286,13 @@ public class SimpleEvent<T> implements Event<T> {
         if(!invoking) {
             int oldSize = size;
             if(clearHandlersInternal()) {
-                onHandlerCountChange(oldSize, 0);
+                trim();
+                onHandlerCountChange(oldSize, size);
             }
         }
         else {
-            modifications.clear(); //remove all prior modifications
-            modifications.add(new HandlerModification(false, true, null));
+            modifications.clear(); //remove all prior modifications (they would be cleared anyway)
+            modifications.add(new Modification(false, true, null));
         }
     }
 
@@ -280,7 +311,8 @@ public class SimpleEvent<T> implements Event<T> {
     protected void onHandlerCountChange(int oldSize, int newSize) {}
 
     /**
-     * Called internally just before handlers will be called. The default implementation does nothing.
+     * Called internally just before handlers will be called. The default implementation does nothing. This exists
+     * mostly for symmetry with {@link SimpleEvent#postInvoke()}.
      */
     protected void preInvoke() {}
 

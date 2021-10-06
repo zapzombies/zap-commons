@@ -27,11 +27,12 @@ public class TimeUtils {
         try {
             action.run();
         } catch (Throwable t) {
+            throw new TimeMeasurementException(timer.getTime(), t);
+        }
+        finally {
             timer.stop();
-            throw new TimeMeasurementException("Error occurred while trying to measure time", timer.getTime(), t);
         }
 
-        timer.stop();
         return timer.getTime();
     }
 }

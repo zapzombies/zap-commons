@@ -35,7 +35,7 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     private HandlerList getHandlerList() {
         if(handlerList == null && !reflectionFailed) {
             try {
-                return (HandlerList)bukkitEventClass.getMethod("getHandlerList").invoke(null);
+                return handlerList = (HandlerList)bukkitEventClass.getMethod("getHandlerList").invoke(null);
             }
             catch(NoSuchMethodException | IllegalAccessException | InvocationTargetException |
                     NullPointerException exception) {
@@ -48,7 +48,7 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     }
 
     private void register() {
-        handlerList = getHandlerList();
+        HandlerList handlerList = getHandlerList();
 
         //noinspection unchecked
         EventExecutor executor = (ignored, event) -> invoke(this, (T)event);
@@ -64,6 +64,8 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     }
 
     private void unregister() {
+        HandlerList handlerList = getHandlerList();
+
         if(handlerList != null) {
             handlerList.unregister(registeredListener);
         }

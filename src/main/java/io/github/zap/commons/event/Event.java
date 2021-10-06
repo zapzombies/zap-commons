@@ -10,18 +10,18 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * Broadcasts events to all registered listeners.
+ * <p>Broadcasts events to all registered listeners.</p>
  *
- * The order in which handlers are executed is not specified and is left up to implementations. Thread-safety, or lack
- * thereof, is also implementation-dependent. Handlers are not guaranteed to be invoked on the same thread as the one
- * calling {@link Event#invoke(Object, Object)} (although implementations may offer this guarantee).
+ * <p>The order in which handlers are executed is not specified and is left up to implementations. Thread-safety, or
+ * lack thereof, is also implementation-dependent. Handlers are not guaranteed to be invoked on the same thread as the
+ * one calling {@link Event#invoke(Object, Object)} (although implementations may offer this guarantee).</p>
  *
- * Handlers may be added and removed at any time (even while other handlers are being called). Recursive invocation is
- * typically disallowed, but there is no requirement that this must be the case.
+ * <p>Handlers may be added and removed at any time (even while other handlers are being called). Recursive invocation
+ * is typically disallowed.</p>
  *
- * Events should, but are not required to use reference equality to compare {@link EventHandler} instances.
+ * <p>Events should, but are not required to use reference equality to compare {@link EventHandler} instances.</p>
  *
- * This class also contains a number of potentially useful utility methods.
+ * <p>This interface also holds a number of potentially useful utility methods.</p>
  * @param <T> The type of parameter event listeners must accept
  */
 public interface Event<T> {
@@ -71,20 +71,21 @@ public interface Event<T> {
     int handlerCount();
 
     /**
-     * Creates an Event implementation that proxies a Bukkit event (see {@link org.bukkit.event.Event}). Such
-     * "proxy events" will have their handlers invoked whenever the proxied Bukkit event is fired.
+     * <p>Creates an Event implementation that proxies a Bukkit event (see {@link org.bukkit.event.Event}). Such
+     * "proxy events" will have their handlers invoked whenever the proxied Bukkit event is fired.</p>
      *
-     * Registration with the Bukkit API will typically occur lazily, only when it is needed, so it is safe to create
-     * multiple proxy events.
+     * <p>Registration with the Bukkit API should occur lazily, only when handlers actually exist, so it is safe to
+     * create proxy events even if it is not guaranteed that they will be used.</p>
      *
-     * There is no thread safety by default, as the majority of Bukkit events are synchronous. For the few that aren't,
-     * see {@link Event#synchronize()}.
+     * <p>The returned event offers no thread safety by default, as the majority of Bukkit events are synchronous. For
+     * the few that aren't, use {@link Event#synchronize()}.</p>
      * @param plugin The plugin to register the proxied Bukkit event under
      * @param bukkitEventClass The class of the Bukkit event
      * @param priority The EventPriority
      * @param ignoreCancelled Whether this event ignores cancelled events
      * @param <T> The type of Bukkit event
      * @return An implementation of Event that is designed to proxy Bukkit's API
+     * @throws NullPointerException if any of the arguments are null
      */
     static <T extends org.bukkit.event.Event> Event<T> bukkitProxy(@NotNull Plugin plugin,
                                                                    @NotNull Class<T> bukkitEventClass,
@@ -103,6 +104,7 @@ public interface Event<T> {
      * @param ignoreCancelled Whether this event ignores cancelled events
      * @param <T> The type of Bukkit event
      * @return An implementation of Event that is designed to proxy Bukkit's API
+     * @throws NullPointerException if any of the arguments are null
      */
     static <T extends org.bukkit.event.Event> Event<T> bukkitProxy(@NotNull Plugin plugin,
                                                                    @NotNull Class<T> bukkitEventClass,
@@ -117,6 +119,7 @@ public interface Event<T> {
      * @param bukkitEventClass The class of the Bukkit event
      * @param <T> The type of Bukkit event
      * @return An implementation of Event that is designed to proxy Bukkit's API
+     * @throws NullPointerException if any of the arguments are null
      */
     static <T extends org.bukkit.event.Event> Event<T> bukkitProxy(@NotNull Plugin plugin,
                                                                    @NotNull Class<T> bukkitEventClass) {
@@ -125,8 +128,8 @@ public interface Event<T> {
 
     /**
      * Creates a synchronized wrapper around this event. Calls to all methods defined in the {@link Event} interface
-     * are synchronized on the same object. Otherwise, this object will exhibit the same implementation characteristics
-     * as it normally would.
+     * are synchronized on the same object. Otherwise, the returned event will exhibit the same implementation
+     * characteristics as this one.
      * @return A thread-safe Event instance
      */
     default @NotNull Event<T> synchronize() {
@@ -178,8 +181,11 @@ public interface Event<T> {
     }
 
     /**
-     * Applies a filter to this event. Any arguments not matching the predicate will fail to invoke handlers. The
-     * returned event will otherwise have the same implementation characteristics as this one.
+     * <p>Creates a new event from this one. Calls to {@link Event#invoke(Object, Object)} on the new event will invoke
+     * this event's handlers if and only if the argument satisfies the predicate.</p>
+     *
+     * <p>If this event is synchronized, any calls to test the predicate will not be synchronized. Users can call
+     * {@link Event#synchronize()} afterwards if it is necessary to synchronize the predicate.</p>
      * @param predicate The predicate to test arguments against
      * @return The new event
      */
@@ -197,10 +203,18 @@ public interface Event<T> {
     }
 
     /**
-     * Links this event to another event. The other event's handlers will be invoked directly after this event's. The
-     * returned event will otherwise have the same implementation characteristics as this one.
+     * <p>Creates a new event from this event, whose invoke method will call another event's handlers directly after
+     * this event's.</p>
+     *
+     * <p>It is important to avoid cyclically linking events, as typical implementations do not support recursive
+     * invocation.</p>
+     *
+     * <p>If this event is synchronized, calls to the linked event's invoke method will not be synchronized unless the
+     * linked method is itself synchronized; in which case the synchronization will occur on a different object. If it
+     * is necessary to synchronize both calls, call {@link Event#synchronize()} on the returned object.</p>
      * @param other The event to link to
      * @return A wrapper for this event, which is linked to the provided event
+     * @throws IllegalArgumentException if other is null or the same event as this
      */
     default @NotNull Event<T> linkTo(@NotNull Event<T> other) {
         Validate.isTrue(other != this, "cannot chain to the same object");
@@ -216,13 +230,14 @@ public interface Event<T> {
     }
 
     /**
-     * Maps this event to an event of another type. Similarly to {@link Event#linkTo(Event)}, the other event's handlers
-     * will be invoked directly after this one. The provided mapping function will be used to convert between the
-     * different types. Otherwise, the returned event will have the same implementation characteristics as this one.
+     * Creates a new event from this event, whose invoke method will call another event's handlers directly after
+     * this event's, and after applying a mapping function to the argument. Otherwise, this behaves identically to
+     * {@link Event#linkTo(Event)}.
      * @param other The event to map calls to
      * @param mapper The mapping function
      * @param <V> The type the other event receives
      * @return A wrapper for this event, which is linked to the provided event of a different type
+     * @throws IllegalArgumentException if other or mapper are null, or other is the same object as this
      */
     default @NotNull <V> Event<T> mapTo(@NotNull Event<V> other, @NotNull Function<T, V> mapper) {
         Validate.isTrue(other != this, "cannot map to the same object");

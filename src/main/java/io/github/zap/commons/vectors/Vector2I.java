@@ -1,8 +1,7 @@
 package io.github.zap.commons.vectors;
 
 /**
- * General interface for a class encapsulating two integer values. Implementations of this interface are required to
- * be effectively immutable; ex. the returned value of x() and z() cannot change for the lifetime of the object.
+ * General interface for a class encapsulating two integer values.
  */
 public interface Vector2I {
     int x();
