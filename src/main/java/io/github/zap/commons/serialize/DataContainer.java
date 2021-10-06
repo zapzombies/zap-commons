@@ -2,6 +2,7 @@ package io.github.zap.commons.serialize;
 
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.text.html.Option;
 import java.util.Optional;
 
 /**
@@ -11,6 +12,8 @@ public interface DataContainer {
     @NotNull <T> Optional<T> getObject(@NotNull Class<T> type, @NotNull String... keys);
 
     @NotNull <T> Optional<T> getObject(@NotNull TypeToken<T> typeToken, @NotNull String ... keys);
+
+    @NotNull Optional<DataContainer> getContainer(@NotNull String ... keys);
 
     @NotNull Optional<String> getString(@NotNull String... keys);
 

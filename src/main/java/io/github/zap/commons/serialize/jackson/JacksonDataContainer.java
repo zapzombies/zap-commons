@@ -61,6 +61,11 @@ class JacksonDataContainer implements DataContainer {
     }
 
     @Override
+    public @NotNull Optional<DataContainer> getContainer(@NotNull String... keys) {
+        return getObjectInternal(JsonNode.class, keys).map(jsonNode -> new JacksonDataContainer(mapper, jsonNode));
+    }
+
+    @Override
     public @NotNull Optional<String> getString(@NotNull String... keys) {
         return getObjectInternal(String.class, keys);
     }
