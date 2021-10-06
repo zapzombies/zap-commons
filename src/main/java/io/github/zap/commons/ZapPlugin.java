@@ -6,10 +6,15 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.concurrent.Callable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
- * A base plugin for *all* zap plugin projects
+ * A base plugin for <i>all</i> zap plugin projects. Provides some standard utilities, such as timing enable, load, and
+ * disable phases, and handling exceptions that occur during said phases.
  */
-public abstract class BaseZapPlugin extends JavaPlugin {
+public abstract class ZapPlugin extends JavaPlugin {
     private Injector injector;
 
     /**
@@ -29,9 +34,9 @@ public abstract class BaseZapPlugin extends JavaPlugin {
     public void onEnable() {
         doTimedCall(
                 this::doEnable,
-                String.format("Enabling %s:", getName()),
+                "Enabling",
                 String.format("%s enabled successfully!", getName()),
-                "A fatal error occurred that prevented the plugin from enabling properly!",
+                "A fatal error occurred while enabling",
                 true);
     }
 
@@ -39,9 +44,9 @@ public abstract class BaseZapPlugin extends JavaPlugin {
     public void onLoad() {
         doTimedCall(
                 this::doLoad,
-                String.format("Loading %s:", getName()),
+                "Loading",
                 String.format("%s loaded successfully!", getName()),
-                "A fatal error occurred that prevented the plugin from loading properly!",
+                "A fatal error occurred while loading",
                 true);
     }
 
@@ -49,21 +54,23 @@ public abstract class BaseZapPlugin extends JavaPlugin {
     public void onDisable() {
         doTimedCall(
                 this::doDisable,
-                String.format("Disabling %s:", getName()),
+                "Disabling",
                 String.format("%s disabled successfully!", getName()),
-                "A fatal error occurred that prevented the plugin from disabling properly!",
+                "A fatal error occurred while disabling",
                 false);
     }
 
-    private void doTimedCall(ThrowableRunnable runnable, String startMsg, String successMsg, String failMsg, boolean disablePluginOnFail) {
+    private void doTimedCall(ThrowableRunnable runnable, String startMsg, String successMsg, String failMsg,
+                             boolean disablePluginOnFail) {
+        Logger logger = getLogger();
         try {
-            getLogger().info(startMsg);
+            logger.info(startMsg);
             long elapsed = TimeUtils.measure(runnable);
-            getLogger().info(successMsg);
-            getLogger().info(String.format("Time elapsed: %sms!", elapsed));
-        } catch (Throwable e) {
-            getLogger().severe(failMsg);
-            e.printStackTrace();
+            logger.info(successMsg);
+            logger.info(String.format("~%sms elapsed", elapsed));
+        } catch (TimeMeasurementException e) {
+            logger.severe(String.format("Exception thrown after ~%sms", e.getTimeElapsed()));
+            logger.log(Level.SEVERE, failMsg, e.getCause());
             if(disablePluginOnFail) {
                 getPluginLoader().disablePlugin(this, true);
             }
@@ -78,15 +85,14 @@ public abstract class BaseZapPlugin extends JavaPlugin {
     public abstract void doEnable() throws LoadFailureException;
 
     /**
-     * Enabling plugin. Same purpose as {@link JavaPlugin#onEnable()}
-     * @throws LoadFailureException any error encountered during plugin enable phase
+     * Loading plugin. Same purpose as {@link JavaPlugin#onLoad()}
+     * @throws LoadFailureException any error encountered during plugin load phase
      */
     public abstract void doLoad() throws LoadFailureException;
 
     /**
-     * Enabling plugin. Same purpose as {@link JavaPlugin#onEnable()}
-     * @throws LoadFailureException any error encountered during plugin enable phase
+     * Disabling plugin. Same purpose as {@link JavaPlugin#onDisable()}
+     * @throws LoadFailureException any error encountered during plugin disable phase
      */
     public abstract void doDisable() throws LoadFailureException;
-
 }

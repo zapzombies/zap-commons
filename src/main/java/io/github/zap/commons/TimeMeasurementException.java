@@ -3,8 +3,8 @@ package io.github.zap.commons;
 public class TimeMeasurementException extends RuntimeException {
     private final long timeElapsed;
 
-    public TimeMeasurementException(String message, long timeElapsed, Throwable cause) {
-        super(message, cause);
+    public TimeMeasurementException(long timeElapsed, Throwable cause) {
+        super(cause);
         this.timeElapsed = timeElapsed;
     }
 

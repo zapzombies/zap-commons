@@ -99,9 +99,11 @@ public class SimpleEvent<T> implements Event<T> {
     }
 
     private void trim() {
-        int newLength = Math.max(size + 1, initialCapacity);
-        if(newLength < bakedHandlers.length) {
-            bakedHandlers = Arrays.copyOf(bakedHandlers, newLength);
+        if(size < bakedHandlers.length >> 1) {
+            int newLength = Math.max(size + 1, initialCapacity);
+            if(newLength < bakedHandlers.length) {
+                bakedHandlers = Arrays.copyOf(bakedHandlers, newLength);
+            }
         }
     }
 
@@ -129,7 +131,6 @@ public class SimpleEvent<T> implements Event<T> {
         if(size > 0) {
             Arrays.fill(bakedHandlers, null);
             size = 0;
-            trim();
             return true;
         }
 
@@ -161,9 +162,7 @@ public class SimpleEvent<T> implements Event<T> {
         }
 
         size = newSize;
-        if(size < (bakedHandlers.length >> 1)) {
-            trim();
-        }
+        trim();
     }
 
     private void processModifications() {
@@ -287,6 +286,7 @@ public class SimpleEvent<T> implements Event<T> {
         if(!invoking) {
             int oldSize = size;
             if(clearHandlersInternal()) {
+                trim();
                 onHandlerCountChange(oldSize, size);
             }
         }

@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
  * A reload-sensitive plugin. Provides events for loading, enabling, and disabling.
  * @param <T> The subclass type
  */
-public abstract class ReloadablePlugin<T extends ReloadablePlugin<T>> extends BaseZapPlugin {
+public abstract class ReloadablePlugin<T extends ReloadablePlugin<T>> extends ZapPlugin {
     private final Event<T> loadEvent = new SimpleEvent<>();
     private final Event<T> enableEvent = new SimpleEvent<>();
     private final Event<T> disableEvent = new SimpleEvent<>();
