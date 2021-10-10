@@ -41,8 +41,9 @@ public interface Event<T> {
      * Some Event implementations may support duplicate handlers, in which case the same handler will be called twice.
      * Others may not support duplicates, in which case a runtime exception will be thrown.
      * @param handler The handler to register
+     * @return this event, for chaining
      */
-    void addHandler(@NotNull EventHandler<T> handler);
+    @NotNull Event<T> addHandler(@NotNull EventHandler<T> handler);
 
     /**
      * Removes a handler from this event, if it is present. If this function is called inside the body of a handler
@@ -50,8 +51,9 @@ public interface Event<T> {
      * The next call to {@link Event#invoke(Object, Object)} will not include the removed handler. If there are multiple
      * handlers that are equal to the provided handler, only one will be removed.
      * @param handler The handler to remove
+     * @return this event, for chaining
      */
-    void removeHandler(@NotNull EventHandler<T> handler);
+    @NotNull Event<T> removeHandler(@NotNull EventHandler<T> handler);
 
     /**
      * Determines if this event contains the specified handler.
@@ -144,16 +146,16 @@ public interface Event<T> {
             }
 
             @Override
-            public void addHandler(@NotNull EventHandler<T> handler) {
+            public @NotNull Event<T> addHandler(@NotNull EventHandler<T> handler) {
                 synchronized (lock) {
-                    Event.this.addHandler(handler);
+                    return Event.this.addHandler(handler);
                 }
             }
 
             @Override
-            public void removeHandler(@NotNull EventHandler<T> handler) {
+            public @NotNull Event<T> removeHandler(@NotNull EventHandler<T> handler) {
                 synchronized (lock) {
-                    Event.this.removeHandler(handler);
+                    return Event.this.removeHandler(handler);
                 }
             }
 

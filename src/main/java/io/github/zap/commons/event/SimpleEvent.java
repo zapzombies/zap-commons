@@ -238,7 +238,7 @@ public class SimpleEvent<T> implements Event<T> {
     }
 
     @Override
-    public void addHandler(@NotNull EventHandler<T> handler) {
+    public @NotNull Event<T> addHandler(@NotNull EventHandler<T> handler) {
         Objects.requireNonNull(handler, "handler cannot be null");
         if(!invoking) {
             int oldSize = size;
@@ -251,10 +251,12 @@ public class SimpleEvent<T> implements Event<T> {
         else {
             modifications.add(new Modification(true, false, handler));
         }
+
+        return this;
     }
 
     @Override
-    public void removeHandler(@NotNull EventHandler<T> handler) {
+    public @NotNull Event<T> removeHandler(@NotNull EventHandler<T> handler) {
         Objects.requireNonNull(handler, "handler cannot be null");
         if(!invoking) {
             int removedIndex;
@@ -267,6 +269,8 @@ public class SimpleEvent<T> implements Event<T> {
         else {
             modifications.add(new Modification(false, false, handler));
         }
+
+        return this;
     }
 
     @Override

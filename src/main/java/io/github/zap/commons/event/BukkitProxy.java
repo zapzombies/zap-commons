@@ -81,31 +81,6 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     }
 
     @Override
-    public void addHandler(@NotNull EventHandler<T> handler) {
-        super.addHandler(handler);
-    }
-
-    @Override
-    public void removeHandler(@NotNull EventHandler<T> handler) {
-        super.removeHandler(handler);
-    }
-
-    @Override
-    public boolean hasHandler(@NotNull EventHandler<T> handler) {
-        return super.hasHandler(handler);
-    }
-
-    @Override
-    public void clearHandlers() {
-        super.clearHandlers();
-    }
-
-    @Override
-    public int handlerCount() {
-        return super.handlerCount();
-    }
-
-    @Override
     protected void onHandlerCountChange(int oldSize, int newSize) {
         super.onHandlerCountChange(oldSize, newSize);
 
