@@ -9,10 +9,14 @@ import org.bukkit.plugin.RegisteredListener;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 
 class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
+    private static final Map<Class<?>, HandlerList> handlerLists = new IdentityHashMap<>();
+
     private final Listener listener = new Listener() {};
 
     private final Plugin plugin;
@@ -34,14 +38,16 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
 
     private HandlerList getHandlerList() {
         if(handlerList == null && !reflectionFailed) {
-            try {
-                return handlerList = (HandlerList)bukkitEventClass.getMethod("getHandlerList").invoke(null);
-            }
-            catch(NoSuchMethodException | IllegalAccessException | InvocationTargetException |
-                    NullPointerException exception) {
-                plugin.getLogger().log(Level.WARNING, "Failed to retrieve handler list", exception);
-                reflectionFailed = true;
-            }
+            handlerList = handlerLists.computeIfAbsent(bukkitEventClass, (key) -> {
+                try {
+                    return (HandlerList)bukkitEventClass.getMethod("getHandlerList").invoke(null);
+                } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException exception) {
+                    plugin.getLogger().log(Level.WARNING, "failed to reflect getHandlerList", exception);
+                    BukkitProxy.this.reflectionFailed = true;
+                }
+
+                return null;
+            });
         }
 
         return handlerList;

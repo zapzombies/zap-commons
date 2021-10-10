@@ -142,6 +142,6 @@ class JacksonDataContainer implements DataContainer {
 
     @Override
     public String toString() {
-        return "JacksonDataContainer{node=" + node + "}";
+        return "JacksonDataContainer{mapper=" + mapper + ", node=" + node + "}";
     }
 }

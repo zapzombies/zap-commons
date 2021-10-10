@@ -19,6 +19,11 @@ class StandardDataSourceTest {
         }
 
         @Override
+        public @NotNull Optional<DataContainer> getContainer(@NotNull String... keys) {
+            return Optional.empty();
+        }
+
+        @Override
         public @NotNull Optional<String> getString(@NotNull String... keys) {
             return Optional.empty();
         }
