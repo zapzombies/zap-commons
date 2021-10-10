@@ -21,14 +21,13 @@ class WrappedEvent<T> implements Event<T> {
      }
 
      @Override
-     public void addHandler(@NotNull EventHandler<T> handler) {
-        wrapped.addHandler(handler);
+     public @NotNull Event<T> addHandler(@NotNull EventHandler<T> handler) {
+        return wrapped.addHandler(handler);
      }
 
-     @NotNull
      @Override
-     public void removeHandler(@NotNull EventHandler<T> handler) {
-        wrapped.removeHandler(handler);
+     public @NotNull Event<T> removeHandler(@NotNull EventHandler<T> handler) {
+        return wrapped.removeHandler(handler);
      }
 
      @Override
