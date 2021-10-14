@@ -14,17 +14,20 @@ import java.util.function.Predicate;
  *
  * <p>The order in which handlers are executed is not specified and is left up to implementations. Thread-safety, or
  * lack thereof, is also implementation-dependent. Handlers are not guaranteed to be invoked on the same thread as the
- * one calling {@link Event#invoke(Object, Object)} (although implementations may offer this guarantee).</p>
+ * one calling {@link Event#handle(Object, Object)} (although implementations may offer this guarantee).</p>
  *
  * <p>Handlers may be added and removed at any time (even while other handlers are being called). Recursive invocation
  * is typically disallowed.</p>
  *
  * <p>Events should, but are not required to use reference equality to compare {@link EventHandler} instances.</p>
  *
+ * <p>All events are also event <i>handlers</i>. This means type-compatible event objects can be registered to other
+ * events.</p>
+ *
  * <p>This interface also holds a number of potentially useful utility methods.</p>
  * @param <T> The type of parameter event listeners must accept
  */
-public interface Event<T> {
+public interface Event<T> extends EventHandler<T> {
     /**
      * Calls the event handlers for this event. The order in which handlers are invoked is not deterministic for some
      * implementations.
@@ -36,24 +39,22 @@ public interface Event<T> {
     /**
      * Adds an event handler to this event. If this function is called inside the body of a handler while it is being
      * invoked by this event, the newly-registered handler will typically only be called during the next call to
-     * {@link Event#invoke(Object, Object)}.
+     * {@link Event#handle(Object, Object)}.
      *
      * Some Event implementations may support duplicate handlers, in which case the same handler will be called twice.
      * Others may not support duplicates, in which case a runtime exception will be thrown.
      * @param handler The handler to register
-     * @return this event, for chaining
      */
-    @NotNull Event<T> addHandler(@NotNull EventHandler<T> handler);
+    void addHandler(@NotNull EventHandler<T> handler);
 
     /**
      * Removes a handler from this event, if it is present. If this function is called inside the body of a handler
      * while it is being invoked by this event, the newly-removed handler will still be called (if it wasn't already).
-     * The next call to {@link Event#invoke(Object, Object)} will not include the removed handler. If there are multiple
+     * The next call to {@link Event#handle(Object, Object)} will not include the removed handler. If there are multiple
      * handlers that are equal to the provided handler, only one will be removed.
      * @param handler The handler to remove
-     * @return this event, for chaining
      */
-    @NotNull Event<T> removeHandler(@NotNull EventHandler<T> handler);
+    void removeHandler(@NotNull EventHandler<T> handler);
 
     /**
      * Determines if this event contains the specified handler.
@@ -129,61 +130,62 @@ public interface Event<T> {
     }
 
     /**
+     * Default implementation of {@link EventHandler}, which simply invokes this event's own handlers.
+     * @param sender The object responsible for sending this event
+     * @param args The arguments, which may be null at the discretion of the calling event
+     */
+    @Override
+    default void handle(Object sender, T args) {
+        invoke(sender, args);
+    }
+
+    /**
+     * Adds the given handlers to this event. The default implementation simply iterates the handlers and calls
+     * {@link Event#addHandler(EventHandler)} on each element.
+     * @param handlers The handlers to add
+     */
+    default void addHandlers(@NotNull Iterable<EventHandler<T>> handlers) {
+        Objects.requireNonNull(handlers, "handlers cannot be null");
+
+        for(EventHandler<T> handler : handlers) {
+            addHandler(handler);
+        }
+    }
+
+    /**
+     * Removes the given handlers from this event. The default implementation simply iterates the handlers and calls
+     * {@link Event#removeHandler(EventHandler)} on each element.
+     * @param handlers The handlers to remove
+     */
+    default void removeHandlers(@NotNull Iterable<EventHandler<T>> handlers) {
+        Objects.requireNonNull(handlers, "handlers cannot be null");
+
+        for(EventHandler<T> handler : handlers) {
+            removeHandler(handler);
+        }
+    }
+
+    /**
      * Creates a synchronized wrapper around this event. Calls to all methods defined in the {@link Event} interface
      * are synchronized on the same object. Otherwise, the returned event will exhibit the same implementation
      * characteristics as this one.
      * @return A thread-safe Event instance
      */
     default @NotNull Event<T> synchronize() {
-        return new Event<>() {
-            private final Object lock = new Object();
-
-            @Override
-            public void invoke(Object sender, T args) {
-                synchronized(lock) {
-                    Event.this.invoke(sender, args);
-                }
-            }
-
-            @Override
-            public @NotNull Event<T> addHandler(@NotNull EventHandler<T> handler) {
-                synchronized (lock) {
-                    return Event.this.addHandler(handler);
-                }
-            }
-
-            @Override
-            public @NotNull Event<T> removeHandler(@NotNull EventHandler<T> handler) {
-                synchronized (lock) {
-                    return Event.this.removeHandler(handler);
-                }
-            }
-
-            @Override
-            public boolean hasHandler(@NotNull EventHandler<T> handler) {
-                synchronized (lock) {
-                    return Event.this.hasHandler(handler);
-                }
-            }
-
-            @Override
-            public void clearHandlers() {
-                synchronized (lock) {
-                    Event.this.clearHandlers();
-                }
-            }
-
-            @Override
-            public int handlerCount() {
-                synchronized (lock) {
-                    return Event.this.handlerCount();
-                }
-            }
-        };
+        return new SynchronizedEvent<>(this);
     }
 
     /**
-     * <p>Creates a new event from this one. Calls to {@link Event#invoke(Object, Object)} on the new event will invoke
+     * Functionally identical to {@link Event#synchronize()}, but uses the provided object for synchronization.
+     * @param lock The object to synchronize on
+     * @return A thread-safe Event instance
+     */
+    default @NotNull Event<T> synchronize(@NotNull Object lock) {
+        return new SynchronizedEvent<>(this, Objects.requireNonNull(lock, "lock cannot be null"));
+    }
+
+    /**
+     * <p>Creates a new event from this one. Calls to {@link Event#handle(Object, Object)} on the new event will invoke
      * this event's handlers if and only if the argument satisfies the predicate.</p>
      *
      * <p>If this event is synchronized, any calls to test the predicate will not be synchronized. Users can call
@@ -196,9 +198,9 @@ public interface Event<T> {
 
         return new WrappedEvent<>(this) {
             @Override
-            public void invoke(Object sender, T args) {
+            public void handle(Object sender, T args) {
                 if(predicate.test(args)) {
-                    super.invoke(sender, args);
+                    super.handle(sender, args);
                 }
             }
         };
@@ -224,9 +226,9 @@ public interface Event<T> {
 
         return new WrappedEvent<>(this) {
             @Override
-            public void invoke(Object sender, T args) {
-                super.invoke(sender, args);
-                other.invoke(sender, args);
+            public void handle(Object sender, T args) {
+                super.handle(sender, args);
+                other.handle(sender, args);
             }
         };
     }
@@ -248,9 +250,9 @@ public interface Event<T> {
 
         return new WrappedEvent<>(this) {
             @Override
-            public void invoke(Object sender, T args) {
-                super.invoke(sender, args);
-                other.invoke(sender, mapper.apply(args));
+            public void handle(Object sender, T args) {
+                super.handle(sender, args);
+                other.handle(sender, mapper.apply(args));
             }
         };
     }

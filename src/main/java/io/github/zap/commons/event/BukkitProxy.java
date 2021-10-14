@@ -25,8 +25,10 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     private final boolean ignoreCancelled;
 
     private boolean reflectionFailed = false;
+
     private HandlerList handlerList = null;
-    private RegisteredListener registeredListener;
+    private final EventExecutor executor;
+    private final RegisteredListener registeredListener;
 
     BukkitProxy(@NotNull Plugin plugin, @NotNull Class<T> bukkitEventClass, @NotNull EventPriority priority,
                 boolean ignoreCancelled) {
@@ -34,6 +36,10 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
         this.bukkitEventClass = Objects.requireNonNull(bukkitEventClass, "bukkitEventClass cannot be null");
         this.priority = Objects.requireNonNull(priority, "priority cannot be null");
         this.ignoreCancelled = ignoreCancelled;
+
+        //noinspection unchecked
+        executor = (ignored, event) -> this.handle(this, (T)event);
+        registeredListener = new RegisteredListener(listener, executor, priority, plugin, ignoreCancelled);
     }
 
     private HandlerList getHandlerList() {
@@ -56,16 +62,12 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     private void register() {
         HandlerList handlerList = getHandlerList();
 
-        //noinspection unchecked
-        EventExecutor executor = (ignored, event) -> invoke(this, (T)event);
-
         if(handlerList != null) {
-            registeredListener = new RegisteredListener(listener, executor, priority, plugin, ignoreCancelled);
             handlerList.register(registeredListener);
         }
         else {
-            plugin.getServer().getPluginManager().registerEvent(bukkitEventClass, listener, priority, executor,
-                    plugin, ignoreCancelled);
+            plugin.getServer().getPluginManager().registerEvent(bukkitEventClass, listener, priority, executor, plugin,
+                    ignoreCancelled);
         }
     }
 

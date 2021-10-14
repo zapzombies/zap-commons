@@ -17,17 +17,17 @@ class WrappedEvent<T> implements Event<T> {
 
      @Override
      public void invoke(Object sender, T args) {
-        wrapped.invoke(sender, args);
+        wrapped.handle(sender, args);
      }
 
      @Override
-     public @NotNull Event<T> addHandler(@NotNull EventHandler<T> handler) {
-        return wrapped.addHandler(handler);
+     public void addHandler(@NotNull EventHandler<T> handler) {
+        wrapped.addHandler(handler);
      }
 
      @Override
-     public @NotNull Event<T> removeHandler(@NotNull EventHandler<T> handler) {
-        return wrapped.removeHandler(handler);
+     public void removeHandler(@NotNull EventHandler<T> handler) {
+        wrapped.removeHandler(handler);
      }
 
      @Override
@@ -44,4 +44,14 @@ class WrappedEvent<T> implements Event<T> {
      public int handlerCount() {
          return wrapped.handlerCount();
      }
+
+    @Override
+    public void addHandlers(@NotNull Iterable<EventHandler<T>> eventHandlers) {
+        wrapped.addHandlers(eventHandlers);
+    }
+
+    @Override
+    public void removeHandlers(@NotNull Iterable<EventHandler<T>> eventHandlers) {
+        wrapped.removeHandlers(eventHandlers);
+    }
 }
