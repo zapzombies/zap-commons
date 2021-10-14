@@ -24,13 +24,13 @@ import java.util.logging.Logger;
  * <p>This class is not thread safe. Unlike many Java collections, it does <i>not</i> guarantee fail-fast behavior if
  * improper concurrent modifications are made. The user is responsible for ensuring thread safety by using synchronized
  * implementations when necessary. Event handlers are called on the same thread that made the call to
- * {@link SimpleEvent#invoke(Object, Object)}.</p>
+ * {@link SimpleEvent#handle(Object, Object)}.</p>
  *
  * <p>SimpleEvent calls handlers in the same order that they are registered (FIFO). Adding, removing, and clearing
  * handlers also respect this order.</p>
  *
  * <p>An attempt to recursively invoke this event will result in an unchecked {@link IllegalStateException}. Events are
- * called recursively when at least one handler calls {@link Event#invoke(Object, Object)} during its own execution.</p>
+ * called recursively when at least one handler calls {@link Event#handle(Object, Object)} during its own execution.</p>
  * @param <T> The type of argument handlers will receive
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -198,14 +198,14 @@ public class SimpleEvent<T> implements Event<T> {
     }
 
     private void invokeInternal(Object sender, T args) {
-        RuntimeException first = null;
+        Throwable first = null;
         for(int i = 0; i < size; i++) {
             EventHandler handler = bakedHandlers[i];
 
             try {
-                handler.invoke(sender, args);
+                handler.handle(sender, args);
             }
-            catch (RuntimeException exception) {
+            catch (Throwable exception) {
                 if(first == null) {
                     first = exception;
                 }
@@ -311,8 +311,9 @@ public class SimpleEvent<T> implements Event<T> {
     protected void onHandlerCountChange(int oldSize, int newSize) {}
 
     /**
-     * Called internally just before handlers will be called. The default implementation does nothing. This exists
-     * mostly for symmetry with {@link SimpleEvent#postInvoke()}.
+     * Called internally just before handlers will be called follow an invocation of
+     * {@link SimpleEvent#handle(Object, Object)}. The default implementation does nothing. This exists mostly for
+     * symmetry with {@link SimpleEvent#postInvoke()}.
      */
     protected void preInvoke() {}
 

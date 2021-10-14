@@ -20,7 +20,6 @@ public class ReflectionUtilsTest {
         private TestInheritedConcreteTypeParamClassModel<Boolean> inheritedConcreteTypeParams;
     }
 
-
     @Test
     public void interfaceTarget() throws NoSuchFieldException {
         List<List<? extends Type>> result = ReflectionUtils.getSuperclassTypeParams(
@@ -68,7 +67,7 @@ public class ReflectionUtilsTest {
                 Iterable.class);
 
         Assertions.assertEquals(3, result.size());
-        Assertions.assertTrue(result.stream().allMatch(i -> i.size() == 1 && i.get(0) == String.class));;
+        Assertions.assertTrue(result.stream().allMatch(i -> i.size() == 1 && i.get(0) == String.class));
     }
 
     @Test
@@ -78,7 +77,7 @@ public class ReflectionUtilsTest {
                 Iterable.class);
 
         Assertions.assertEquals(3, result.size());
-        Assertions.assertTrue(result.stream().allMatch(i -> i.size() == 1 && i.get(0) == String.class));;
+        Assertions.assertTrue(result.stream().allMatch(i -> i.size() == 1 && i.get(0) == String.class));
     }
 
 }

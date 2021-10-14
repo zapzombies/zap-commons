@@ -9,10 +9,14 @@ import org.bukkit.plugin.RegisteredListener;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 
 class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
+    private static final Map<Class<?>, HandlerList> handlerLists = new IdentityHashMap<>();
+
     private final Listener listener = new Listener() {};
 
     private final Plugin plugin;
@@ -21,8 +25,10 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     private final boolean ignoreCancelled;
 
     private boolean reflectionFailed = false;
+
     private HandlerList handlerList = null;
-    private RegisteredListener registeredListener;
+    private final EventExecutor executor;
+    private final RegisteredListener registeredListener;
 
     BukkitProxy(@NotNull Plugin plugin, @NotNull Class<T> bukkitEventClass, @NotNull EventPriority priority,
                 boolean ignoreCancelled) {
@@ -30,18 +36,24 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
         this.bukkitEventClass = Objects.requireNonNull(bukkitEventClass, "bukkitEventClass cannot be null");
         this.priority = Objects.requireNonNull(priority, "priority cannot be null");
         this.ignoreCancelled = ignoreCancelled;
+
+        //noinspection unchecked
+        executor = (ignored, event) -> this.handle(this, (T)event);
+        registeredListener = new RegisteredListener(listener, executor, priority, plugin, ignoreCancelled);
     }
 
     private HandlerList getHandlerList() {
         if(handlerList == null && !reflectionFailed) {
-            try {
-                return handlerList = (HandlerList)bukkitEventClass.getMethod("getHandlerList").invoke(null);
-            }
-            catch(NoSuchMethodException | IllegalAccessException | InvocationTargetException |
-                    NullPointerException exception) {
-                plugin.getLogger().log(Level.WARNING, "Failed to retrieve handler list", exception);
-                reflectionFailed = true;
-            }
+            handlerList = handlerLists.computeIfAbsent(bukkitEventClass, (key) -> {
+                try {
+                    return (HandlerList)bukkitEventClass.getMethod("getHandlerList").invoke(null);
+                } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException exception) {
+                    plugin.getLogger().log(Level.WARNING, "failed to reflect getHandlerList", exception);
+                    BukkitProxy.this.reflectionFailed = true;
+                }
+
+                return null;
+            });
         }
 
         return handlerList;
@@ -50,16 +62,12 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
     private void register() {
         HandlerList handlerList = getHandlerList();
 
-        //noinspection unchecked
-        EventExecutor executor = (ignored, event) -> invoke(this, (T)event);
-
         if(handlerList != null) {
-            registeredListener = new RegisteredListener(listener, executor, priority, plugin, ignoreCancelled);
             handlerList.register(registeredListener);
         }
         else {
-            plugin.getServer().getPluginManager().registerEvent(bukkitEventClass, listener, priority, executor,
-                    plugin, ignoreCancelled);
+            plugin.getServer().getPluginManager().registerEvent(bukkitEventClass, listener, priority, executor, plugin,
+                    ignoreCancelled);
         }
     }
 
@@ -72,31 +80,6 @@ class BukkitProxy<T extends org.bukkit.event.Event> extends SimpleEvent<T> {
         else {
             HandlerList.unregisterAll(listener);
         }
-    }
-
-    @Override
-    public void addHandler(@NotNull EventHandler<T> handler) {
-        super.addHandler(handler);
-    }
-
-    @Override
-    public void removeHandler(@NotNull EventHandler<T> handler) {
-        super.removeHandler(handler);
-    }
-
-    @Override
-    public boolean hasHandler(@NotNull EventHandler<T> handler) {
-        return super.hasHandler(handler);
-    }
-
-    @Override
-    public void clearHandlers() {
-        super.clearHandlers();
-    }
-
-    @Override
-    public int handlerCount() {
-        return super.handlerCount();
     }
 
     @Override

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 class SimpleEventTest {
     private static final ExceptionHandler handler = exception -> {
-        throw exception;
+        throw new RuntimeException(exception);
     };
 
     private final Event<Integer> simpleEvent = new SimpleEvent<>(handler, 8);
@@ -18,7 +18,7 @@ class SimpleEventTest {
         simpleEvent.addHandler((event, args) -> mutableInt.increment());
         simpleEvent.addHandler((event, args) -> mutableInt.increment());
         simpleEvent.addHandler((event, args) -> mutableInt.increment());
-        simpleEvent.invoke(this,69420);
+        simpleEvent.handle(this,69420);
 
         Assertions.assertSame( 3, mutableInt.intValue());
     }
@@ -32,7 +32,7 @@ class SimpleEventTest {
         simpleEvent.addHandler(remove);
 
         simpleEvent.removeHandler(remove);
-        simpleEvent.invoke(this,0);
+        simpleEvent.handle(this,0);
 
         Assertions.assertSame(1, first.intValue());
     }
@@ -46,7 +46,7 @@ class SimpleEventTest {
         simpleEvent.addHandler((sender, args) -> mutableInt.increment());
         simpleEvent.clearHandlers();
 
-        simpleEvent.invoke(this,0);
+        simpleEvent.handle(this,0);
 
         Assertions.assertSame(0, mutableInt.intValue());
     }
@@ -60,8 +60,8 @@ class SimpleEventTest {
             simpleEvent.addHandler((sender1, args1) -> mutableInt.increment());
         });
 
-        simpleEvent.invoke(this,0);
-        simpleEvent.invoke(this,0);
+        simpleEvent.handle(this,0);
+        simpleEvent.handle(this,0);
 
         Assertions.assertSame(3, mutableInt.intValue());
     }
@@ -78,11 +78,11 @@ class SimpleEventTest {
             simpleEvent.removeHandler(removed);
         });
 
-        simpleEvent.invoke(this,0);
+        simpleEvent.handle(this,0);
         Assertions.assertSame(2, mutableInt.intValue());
         mutableInt.setValue(0);
 
-        simpleEvent.invoke(this, 0);
+        simpleEvent.handle(this, 0);
         Assertions.assertSame(1, mutableInt.intValue());
     }
 
@@ -105,7 +105,7 @@ class SimpleEventTest {
         simpleEvent.removeHandler(removed1);
         simpleEvent.removeHandler(removed2);
 
-        simpleEvent.invoke(this,0);
+        simpleEvent.handle(this,0);
         Assertions.assertSame(3, mutableInt.intValue());
     }
 
@@ -129,11 +129,11 @@ class SimpleEventTest {
         });
         simpleEvent.addHandler(removed2);
 
-        simpleEvent.invoke(this,0);
+        simpleEvent.handle(this,0);
         Assertions.assertSame(6, mutableInt.intValue());
 
         mutableInt.setValue(0);
-        simpleEvent.invoke(this,0);
+        simpleEvent.handle(this,0);
         Assertions.assertSame(3, mutableInt.intValue());
     }
 
@@ -145,10 +145,10 @@ class SimpleEventTest {
             simpleEvent.clearHandlers();
         });
 
-        simpleEvent.invoke(this,0);
+        simpleEvent.handle(this,0);
         Assertions.assertSame(1, mutableInt.intValue());
 
-        simpleEvent.invoke(this,0);
+        simpleEvent.handle(this,0);
         Assertions.assertSame(1, mutableInt.intValue());
     }
 
@@ -170,7 +170,7 @@ class SimpleEventTest {
         });
         simpleEvent.addHandler((sender, args) -> integer.increment());
 
-        Assertions.assertThrows(ArrayIndexOutOfBoundsException.class, () -> simpleEvent.invoke(this, 0));
+        Assertions.assertThrows(RuntimeException.class, () -> simpleEvent.handle(this, 0));
         Assertions.assertSame(3, integer.intValue());
     }
 }
