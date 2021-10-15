@@ -12,6 +12,9 @@ class BasicMetadataStore implements MetadataStore {
 
     @Override
     public @NotNull Optional<MetadataValue> getValue(@NotNull UUID id, @NotNull String key) {
+        Objects.requireNonNull(id, "id cannot be null");
+        Objects.requireNonNull(key, "key cannot be null");
+
         Map<String, MetadataValue> idValues = mappings.get(id);
 
         if(idValues != null) {
@@ -23,11 +26,15 @@ class BasicMetadataStore implements MetadataStore {
 
     @Override
     public void add(@NotNull UUID id, @NotNull String key, @Nullable Object object) {
+        Objects.requireNonNull(id, "id cannot be null");
+        Objects.requireNonNull(key, "key cannot be null");
         mappings.computeIfAbsent(id, (ignored) -> new HashMap<>()).put(key, new BasicMetadataValue(object));
     }
 
     @Override
     public void remove(@NotNull UUID id, @NotNull String key) {
+        Objects.requireNonNull(id, "id cannot be null");
+        Objects.requireNonNull(key, "key cannot be null");
         Map<String, MetadataValue> map = mappings.get(id);
         if(map != null) {
             map.remove(key);
@@ -36,6 +43,7 @@ class BasicMetadataStore implements MetadataStore {
 
     @Override
     public void removeAll(@NotNull UUID id) {
+        Objects.requireNonNull(id, "id cannot be null");
         mappings.remove(id);
     }
 }

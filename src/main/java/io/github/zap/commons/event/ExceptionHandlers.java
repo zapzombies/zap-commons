@@ -15,7 +15,7 @@ public final class ExceptionHandlers {
         throw new RuntimeException(exception);
     };
 
-    private static final String DEFAULT_ERROR_MESSAGE = "runtime exception(s) thrown by handler(s)";
+    private static final String DEFAULT_ERROR_MESSAGE = "exception(s) thrown during event processing";
 
     private ExceptionHandlers() {}
 

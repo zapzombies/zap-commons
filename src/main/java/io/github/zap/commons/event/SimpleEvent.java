@@ -81,16 +81,6 @@ public class SimpleEvent<T> implements Event<T> {
     }
 
     /**
-     * Creates a new SimpleEvent, which will handle exceptions by logging them with the provided Logger
-     * (see {@link ExceptionHandlers#logHandler(Logger)}), and will use the default initial capacity (8).
-     * @param logger The logger to use
-     * @throws IllegalArgumentException if logger is null
-     */
-    public SimpleEvent(@NotNull Logger logger) {
-        this(ExceptionHandlers.logHandler(logger));
-    }
-
-    /**
      * Creates a new SimpleEvent, which handles exceptions by rethrowing them
      * (see {@link ExceptionHandlers#rethrow()}), and the default initial capacity (8).
      */
@@ -109,8 +99,8 @@ public class SimpleEvent<T> implements Event<T> {
 
     private void addHandlerInternal(EventHandler<T> handler) {
         if(size >= bakedHandlers.length) {
-            //scale by 3/2 each resize
-            bakedHandlers = Arrays.copyOf(bakedHandlers, ((bakedHandlers.length * 3) >> 1) + 1);
+            //scale by 2 each resize
+            bakedHandlers = Arrays.copyOf(bakedHandlers, (bakedHandlers.length >> 1) + 1);
         }
 
         bakedHandlers[size++] = handler;
@@ -223,7 +213,7 @@ public class SimpleEvent<T> implements Event<T> {
     @Override
     public void invoke(Object sender, T args) {
         if(invoking) {
-            throw new IllegalStateException("cannot recursively invoke an event");
+            throw new IllegalStateException("cannot recursively invoke SimpleEvent");
         }
 
         try {

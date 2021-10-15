@@ -207,36 +207,8 @@ public interface Event<T> extends EventHandler<T> {
     }
 
     /**
-     * <p>Creates a new event from this event, whose invoke method will call another event's handlers directly after
-     * this event's.</p>
-     *
-     * <p>It is important to avoid cyclically linking events, as typical implementations do not support recursive
-     * invocation.</p>
-     *
-     * <p>If this event is synchronized, calls to the linked event's invoke method will not be synchronized unless the
-     * linked method is itself synchronized; in which case the synchronization will occur on a different object. If it
-     * is necessary to synchronize both calls, call {@link Event#synchronize()} on the returned object.</p>
-     * @param other The event to link to
-     * @return A wrapper for this event, which is linked to the provided event
-     * @throws IllegalArgumentException if other is null or the same event as this
-     */
-    default @NotNull Event<T> linkTo(@NotNull Event<T> other) {
-        Validate.isTrue(other != this, "cannot chain to the same object");
-        Objects.requireNonNull(other, "other cannot be null");
-
-        return new WrappedEvent<>(this) {
-            @Override
-            public void handle(Object sender, T args) {
-                super.handle(sender, args);
-                other.handle(sender, args);
-            }
-        };
-    }
-
-    /**
      * Creates a new event from this event, whose invoke method will call another event's handlers directly after
-     * this event's, and after applying a mapping function to the argument. Otherwise, this behaves identically to
-     * {@link Event#linkTo(Event)}.
+     * this event's, and after applying a mapping function to the argument.
      * @param other The event to map calls to
      * @param mapper The mapping function
      * @param <V> The type the other event receives
