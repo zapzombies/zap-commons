@@ -311,7 +311,7 @@ public class SimpleEvent<T> implements Event<T> {
     protected void onHandlerCountChange(int oldSize, int newSize) {}
 
     /**
-     * Called internally just before handlers will be called follow an invocation of
+     * Called internally just before handlers will be called following an invocation of
      * {@link SimpleEvent#handle(Object, Object)}. The default implementation does nothing. This exists mostly for
      * symmetry with {@link SimpleEvent#postInvoke()}.
      */

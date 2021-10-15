@@ -16,17 +16,17 @@ public abstract class ReloadablePlugin<T extends ReloadablePlugin<T>> extends Za
 
     @Override
     public final void doLoad() {
-        loadEvent.handle(this, getPlugin());
+        loadEvent.invoke(this, getPlugin());
     }
 
     @Override
     public final void doEnable() {
-        enableEvent.handle(this, getPlugin());
+        enableEvent.invoke(this, getPlugin());
     }
 
     @Override
     public final void doDisable() {
-        disableEvent.handle(this, getPlugin());
+        disableEvent.invoke(this, getPlugin());
     }
 
     public void registerLoadHandler(@NotNull EventHandler<T> handler) {
