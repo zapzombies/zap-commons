@@ -22,7 +22,7 @@ class BasicMetadataStore implements MetadataStore {
     }
 
     @Override
-    public void addMetadata(@NotNull UUID id, @NotNull String key, @Nullable Object object) {
+    public void add(@NotNull UUID id, @NotNull String key, @Nullable Object object) {
         mappings.computeIfAbsent(id, (ignored) -> new HashMap<>()).put(key, new BasicMetadataValue(object));
     }
 
