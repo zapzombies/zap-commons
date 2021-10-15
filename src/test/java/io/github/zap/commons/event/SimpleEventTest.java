@@ -170,7 +170,8 @@ class SimpleEventTest {
         });
         simpleEvent.addHandler((sender, args) -> integer.increment());
 
-        Assertions.assertThrows(RuntimeException.class, () -> simpleEvent.handle(this, 0));
+        Throwable t = Assertions.assertThrows(RuntimeException.class, () -> simpleEvent.handle(this, 0));
+        Assertions.assertTrue(t.getCause() instanceof ArrayIndexOutOfBoundsException);
         Assertions.assertSame(3, integer.intValue());
     }
 }

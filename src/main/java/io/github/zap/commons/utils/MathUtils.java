@@ -16,4 +16,8 @@ public class MathUtils {
             return upperValue - clamp(-value, 0, upperValue);
         }
     }
+
+    public static long longFromInts(int x, int z) {
+        return (((long)x) << 32) | (z & 0xFFFFFFFFL);
+    }
 }
